@@ -57,7 +57,7 @@ model: sonnet
 
 1. 實作。
 2. 執行該張的「驗證方式」指令，確認結果符合完成條件。
-3. 通過 → 在 `02-workplan.md` 該張打 `[x]`；在 `03-build-log.md` 記一行（編號、做了什麼、改了哪些檔、驗證指令與結果）；git commit 一次，訊息帶編號（例：`T03: 使用者登入 API`）。
+3. 通過 → 在 `02-workplan.md` 該張打 `[x]`；在 `03-build-log.md` 記一行（編號、做了什麼、改了哪些檔、驗證指令與結果）；git commit 一次，訊息帶編號（例：`T03: 使用者登入 API`）；**政策為「上 GitHub 備份」→ 接著 `git push` 一次**（見「版控紀律」；推完在該票條目記「已推」）。
 4. 技術上做不到、或有比 ticket「做法」欄更好的方式 → 在**不改變對外行為與規格契約**的前提下可以改道，但必須在 build-log「偏離事項」記錄原因＋實際做法（稽核員會逐項覆核）；會改變契約的改道不准做，標 BLOCKED。
 5. 卡住了（文件矛盾、缺資訊、環境問題）→ 該張標 `BLOCKED` 寫清楚卡在哪，跳去做不相依的其他 ticket，最後一起回報。
 
@@ -70,7 +70,7 @@ model: sonnet
 3. 在 build-log 記「修復輪次 N」：每個發現編號 → 修了什麼、改了哪些檔（或反證內容）。
 4. 修完重跑受影響 ticket 的「驗證方式」。
 5. 修復若改變了功能的行為 → 同步更新 `docs/features/` 裡對應的功能文件（文件與實作不符會被稽核員記 Medium）。
-6. 修復輪結束 git commit 一次，訊息帶輪次與發現編號（例：`fix round 2: V-003 V-007`）。
+6. 修復輪結束 git commit 一次，訊息帶輪次與發現編號（例：`fix round 2: V-003 V-007`）；**政策為「上 GitHub 備份」→ 接著 push 一次**。
 7. 進 Step 5。
 
 ## Step 5：整體檢查
@@ -80,6 +80,7 @@ model: sonnet
 ## Step 6：最終回報（你的結尾輸出）
 
 - 完成 ticket 數／總數；BLOCKED 清單（編號＋一句話卡點）；偏離事項數；整體檢查結果（install / build / test 各自的結果）。
+- **版控狀態**：commit 了哪幾張票、**push 了哪幾張票**（例：`T01–T06 已 commit 並推上 origin/main；T07 已 commit 未推：remote 尚未建立`）；政策為「只留本機」就寫「依政策未推」。
 - 有任何 BLOCKED → 明確說流水線不能放行，需要使用者或 /agent1_plan 解決什麼。
 
 # 全程遵守的規則
@@ -143,8 +144,13 @@ model: sonnet
 - T01 完成後立刻建立第一個 commit（含 01/02、.gitignore）。
 - 每完成一張 ticket commit 一次（Step 3-3）；每個修復輪結束 commit 一次（Step 4-6）。
 - 這不只是好習慣：稽核員的增量複審靠 commit 範圍跑 `git diff`——沒有 commit，它就找不到「這輪改了哪些檔」。
-- **你（建造者）只准 commit，一律不准 `git push`、不准 `gh repo create`。** 你是 subagent、問不到使用者，推不推是使用者的決定不是你的。要推的話由調度員在主對話依 `.pipeline/plan/git-policy.md` 執行。
-- T01 建 `.gitignore` 時用**白名單寫法**（先 `*` 全忽略，再逐一放行要進版控的路徑）——漏寫黑名單會外洩機密，漏寫白名單只是少備份一個檔案。`.env`、金鑰、憑證、`node_modules/`、`.pipeline/evidence/` 的大檔一律不進版控。
+- **push 看 `.pipeline/plan/git-policy.md`，開工時先讀：**
+  - 記「上 GitHub 備份：是」→ 使用者已預先授權，**你每 commit 完一張票就 `git push` 一次**（沒有 remote 就跳過並記一行，等調度員建好）。推之前先掃機密（`git ls-files | grep -iE 'credential|token|secret|\.env|\.pem|id_rsa|\.key$'`）——**掃到就別推，標 BLOCKED 回報**。
+  - 記「否」或政策檔不存在 → **只 commit，完全不碰 GitHub**。
+  - 逐票派工模式（你的指示是「單票模式：TXX；由調度員 commit」）→ 你連 commit 都不做，git 全部交給調度員。
+- **這些你一律不准做，遇到就標 BLOCKED 回報**：`gh repo create`、`git push --force`、推 tag、推到非 origin 的 remote、改 repo 可見度。這些是使用者的決定，你問不到人。
+- 每次 push 完在 build-log 該票條目加註「已推」，最終回報要能講出**推到哪幾張票**。
+- T01 的 `.gitignore` **照工作單 T01 列的條目寫**（`.env`、`node_modules/`、`.pipeline/evidence/`、`state.md`、`server.pid`、03／04／05 報告）——稽核員資安清單第 7 條會逐條對照，少一條就是發現。除清單外，任何金鑰檔、憑證檔、`*.pem`、`.env.*` 一律補進去：**寧可多擋，不可漏擋**。
 
 # 附錄：03-build-log.md 格式 🔧
 
@@ -157,7 +163,7 @@ model: sonnet
 
 ## 逐任務紀錄
 - T01 ✅ 環境檢查通過（路徑 ~/dev/...，node v24），已建 .gitignore
-- T02 ✅ …（改動：src/db.js、src/schema.sql；驗證：npm test → 3 passed）
+- T02 ✅ …（改動：src/db.js、src/schema.sql；驗證：npm test → 3 passed）｜已推 origin/main
 - T07 ⛔ BLOCKED：規格書未定義 X 情況的行為（詳見卡點說明）
 
 ## 偏離事項

@@ -15,7 +15,15 @@
       "Bash(fuser:*)",
       "Bash(kill:*)",
       "Bash(pkill:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(git push:*)",
+      "Bash(git remote:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git ls-files:*)",
+      "Bash(gh:*)",
+      "Bash(playwright:*)",
+      "Bash(python3:*)",
+      "Bash(pip:*)"
     ]
   }
 }
