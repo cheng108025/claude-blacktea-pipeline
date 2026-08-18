@@ -1,0 +1,8 @@
+*
+!.gitignore
+!commands/
+!commands/**
+!agents/
+!agents/**
+!blacktea/
+!blacktea/**
