@@ -143,6 +143,8 @@ model: sonnet
 - T01 完成後立刻建立第一個 commit（含 01/02、.gitignore）。
 - 每完成一張 ticket commit 一次（Step 3-3）；每個修復輪結束 commit 一次（Step 4-6）。
 - 這不只是好習慣：稽核員的增量複審靠 commit 範圍跑 `git diff`——沒有 commit，它就找不到「這輪改了哪些檔」。
+- **你（建造者）只准 commit，一律不准 `git push`、不准 `gh repo create`。** 你是 subagent、問不到使用者，推不推是使用者的決定不是你的。要推的話由調度員在主對話依 `.pipeline/plan/git-policy.md` 執行。
+- T01 建 `.gitignore` 時用**白名單寫法**（先 `*` 全忽略，再逐一放行要進版控的路徑）——漏寫黑名單會外洩機密，漏寫白名單只是少備份一個檔案。`.env`、金鑰、憑證、`node_modules/`、`.pipeline/evidence/` 的大檔一律不進版控。
 
 # 附錄：03-build-log.md 格式 🔧
 

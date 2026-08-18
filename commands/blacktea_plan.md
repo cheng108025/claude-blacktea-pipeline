@@ -44,6 +44,8 @@ model: opus
 
 使用者在 Phase E 確認、工作單定稿後 → 更新 state.md → 進入階段二，**之後不再徵詢使用者，自動接力到底**。
 
+**這也是為什麼 Git 版控政策要在 Phase 0 就問完**（要不要建 GitHub repo／私有或公開／要不要每票 push）：階段二之後不再打斷使用者，建造階段的調度員直接照 `.pipeline/plan/git-policy.md` 自動執行。政策檔不存在就不准自行建 repo 或 push。
+
 ## 階段二：建造
 
 照 `~/.claude/commands/agent2_build.md` 的規則執行：門禁（工作單已定稿）→ spawn agent2-build subagent → 讀 build-log 檢查結果。

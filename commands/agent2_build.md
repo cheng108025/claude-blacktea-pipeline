@@ -22,6 +22,26 @@ model: opus
 
 **門禁**：`.pipeline/plan/02-workplan.md` 必須存在且已定稿（檔首沒有 DRAFT 標記）。不符合 → 提示使用者先跑 `/agent1_plan` 完成最終確認，然後停止。
 
+# 開工前：確認 Git 版控政策 🔧
+
+讀 `.pipeline/plan/git-policy.md`：
+
+- **存在** → 照它執行，**不要再問使用者**（訪談階段已經問過了）。
+- **不存在**（單獨跑 `/agent2_build`、沒經過訪談官）→ **現在就在主對話問使用者這一題**：這個專案要「上 GitHub 備份」還是「只留在本機」？選備份就再問私有／公開與 repo 名稱。問完寫成 `.pipeline/plan/git-policy.md` 再開工。
+
+**政策說「上 GitHub 備份」而遠端還沒建 → 由你（調度員）在 T01 完成後執行：**
+
+```bash
+gh auth status                        # 沒登入先提示使用者跑 gh auth login
+gh repo create <名稱> --private --source=. --remote=origin    # 或 --public，照政策
+```
+
+**鐵律：**
+
+- **建 repo 與 push 只有調度員能做，建造者 subagent 一律不准碰**——subagent 問不到使用者，讓它自己決定推不推等於沒有把關。
+- push 前一律先跑機密掃描（見 `~/.claude/skills/git/SKILL.md` 的「push 前的敏感檔檢查」）；**掃到東西就停下來問使用者，不要推**。
+- `gh auth status` 失敗 → 不要卡住整條流水線：照常 commit，把 push 標記為「延後」，最後摘要時告訴使用者要補推。
+
 # 模式選擇 🔧
 
 1. **修復輪**（指示含「修復輪」）→ 派**一隻** agent2-build 帶著退回清單執行，照舊。
@@ -37,9 +57,9 @@ model: opus
    - 檔案**無重疊** → 可並行：同時派多隻 agent2-build，**最多 3 隻** 🔧，每隻的指示為「單票模式：TXX；由調度員 commit」。
    - 檔案**有重疊** → 同一條道，照依賴／編號順序串行。
 3. **強制串行清單**（不管重不重疊，永不並行）：動 `package.json`／lockfile 的票、資料庫 schema／migration 票、**驗證方式需要啟動 dev server 的票**（會搶 port）、動 `.pipeline/` 的票。**判斷不了會不會衝突 → 一律當作會衝突，串行。寧慢勿亂。**
-4. **收結果與 commit**：每隻回來後，核對它回報的異動檔案與工單 `[x]`，然後由你 `git add <該票的檔案>` → commit（訊息帶票號）——**git 只有你一個人動，永不打架**；每票一個 commit 的紀律不變（稽核員的增量 diff 靠它）。
+4. **收結果、commit、（依政策）push**：每隻回來後，核對它回報的異動檔案與工單 `[x]`，然後由你 `git add <該票的檔案>` → commit（訊息帶票號）——**git 只有你一個人動，永不打架**；每票一個 commit 的紀律不變（稽核員的增量 diff 靠它）。**政策為「上 GitHub 備份」→ 這張票 commit 完立刻 `git push`**（並行收回的票逐一 commit 完各推一次，或攢齊該批一起推都可以，但不可跳過——使用者要的是在 GitHub 上看得到進度）；政策為「只留本機」→ 只 commit，**完全不碰 GitHub**。
 5. **BLOCKED**：某票回報 BLOCKED → 記下，跳過它與所有依賴它的票，其餘照常派；最後統一列出。
-6. **收尾**：全部票處理完 → 派最後一隻 agent2-build 跑整體檢查（install → build → test）。
+6. **收尾**：全部票處理完 → 派最後一隻 agent2-build 跑整體檢查（install → build → test）。**政策為「上 GitHub 備份」→ 這裡再 `git push` 一次收尾**，把過程中因 gh 未登入等原因延後的 commit 一次補推上去；補不了就在摘要明說還差幾個 commit 沒推。
 7. **進度**：每完成一張票更新一次 `.pipeline/state.md`（中斷後續跑：已 `[x]` 的票不會重派）。
 
 # 完成後摘要（兩種模式相同）
@@ -50,4 +70,5 @@ model: opus
 - BLOCKED 清單（如有 → 說明各卡點；屬需求缺漏 → 提示跑 `/agent1_plan` 走需求變更子流程）
 - 偏離事項數
 - 整體檢查結果（install / build / test）
+- **版控狀態**：commit 幾個、有沒有推上 GitHub（推了就附 repo 網址；沒推或延後要說明原因，例如 gh 未登入）
 - 下一步建議：全數完成且無 BLOCKED → 執行 `/agent3_review`
