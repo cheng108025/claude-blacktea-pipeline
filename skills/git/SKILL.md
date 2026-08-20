@@ -1,11 +1,11 @@
 ---
 name: git
-description: 任何牽涉 git／GitHub 的動作都要先讀本檔。三種時機：(1) 建立新專案或 git init 時——必須先問使用者要不要推 GitHub（一個專案只問這一次，答應了就長期有效）；(2) 準備 push／建 remote 時——查專案有沒有先授權（`.pipeline/plan/git-policy.md` 或使用者答應過）：有就直接推並回報推了哪幾張票，沒有就先問；force push／推 tag／改公開一律要再問；(3) 遇到 git 錯誤時——push 失敗、憑證／TLS 錯誤、GitHub 連不上、要求輸入密碼、dubious ownership、睡醒後 git 突然壞掉等，內含 WSL 環境的診斷順序與修復指令。
+description: 任何牽涉 git／GitHub 的動作都要先讀本檔。三種時機：(1) 建立新專案或 git init 時——必須先問使用者要不要推 GitHub（一個專案只問這一次，答應了就長期有效）；(2) 準備 push／建 remote 時——查專案有沒有先授權（`.pipeline/plan/git-policy.md` 或使用者答應過）：有就直接推並回報推了哪幾張票，沒有就先問；force push／推 tag／改公開一律要再問；(3) 遇到 git 錯誤時——push 失敗、憑證／TLS 錯誤、GitHub 連不上、要求輸入密碼、dubious ownership、睡醒後 git 突然壞掉等，內含 WSL 環境的診斷順序與修復指令;(4) VS Code 檔案總管右鍵問題——「以 Code 開啟」不見了、只剩空白處有、或開 WSL 資料夾還要手動點連線,修復指令在 Part C(2026-08-20 整套修過一次)。
 ---
 
 # Git 使用規範與問題急救手冊（WSL Ubuntu-24.04 環境）
 
-本檔分兩部分：**Part A 強制規則**（動手前必讀）、**Part B 問題急救**（出錯時查表）。
+本檔分三部分：**Part A 強制規則**（動手前必讀）、**Part B git 問題急救**（出錯時查表）、**Part C VS Code 右鍵整合急救**（檔案總管右鍵相關）。
 
 ---
 
@@ -152,3 +152,73 @@ curl -sI https://github.com | head -1  # 5. 網路通不通
 ```
 
 照順序查，每步有結果再動手修；**不要一次改一堆設定**——改完記不得動過什麼，下次更難查。
+
+---
+
+# Part C:VS Code 右鍵整合急救(Windows 端)
+
+2026-08-20 整套發生並修復過一次。特徵:壞的都在 Windows 端(登錄檔、選單、VS Code),WSL 本身沒事;所有指令直接在 WSL 終端機執行即可(reg.exe 透過 interop 寫 Windows 登錄檔,免系統管理員)。改完不用重開機,右鍵立即生效。
+
+## 症狀 C1:檔案總管右鍵沒有「以 Code 開啟」
+
+成因:VS Code 自動更新會照安裝程式的工作紀錄重裝,「加入右鍵選單」記成未勾選時,更新會把 HKCU 的右鍵登錄鍵整組清掉。
+
+診斷——查無此鍵就是中了:
+
+```bash
+reg.exe query 'HKCU\Software\Classes\Directory\shell\VSCode' /s
+```
+
+修復(三組:點資料夾本身/資料夾空白處/點檔案),command 直接指向 C3 的轉接器;最後兩行補正安裝工作紀錄防復發:
+
+```bash
+W='C:\Windows\System32\wscript.exe'
+V='C:\Users\peter\.vscode\open-with-code.vbs'   # 轉接器不在了 → 先看 C3 復原
+C='C:\Users\peter\AppData\Local\Programs\Microsoft VS Code\Code.exe'
+reg.exe add 'HKCU\Software\Classes\Directory\shell\VSCode' /ve /d '以 Code 開啟' /f
+reg.exe add 'HKCU\Software\Classes\Directory\shell\VSCode' /v Icon /d "$C" /f
+reg.exe add 'HKCU\Software\Classes\Directory\shell\VSCode\command' /ve /d "\"$W\" \"$V\" \"%V\"" /f
+reg.exe add 'HKCU\Software\Classes\Directory\Background\shell\VSCode' /ve /d '以 Code 開啟' /f
+reg.exe add 'HKCU\Software\Classes\Directory\Background\shell\VSCode' /v Icon /d "$C" /f
+reg.exe add 'HKCU\Software\Classes\Directory\Background\shell\VSCode\command' /ve /d "\"$W\" \"$V\" \"%V\"" /f
+reg.exe add 'HKCU\Software\Classes\*\shell\VSCode' /ve /d '以 Code 開啟' /f
+reg.exe add 'HKCU\Software\Classes\*\shell\VSCode' /v Icon /d "$C" /f
+reg.exe add 'HKCU\Software\Classes\*\shell\VSCode\command' /ve /d "\"$W\" \"$V\" \"%1\"" /f
+reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{771FD6B0-FA20-440A-A002-3B3BAC16DC50}_is1' /v 'Inno Setup: Selected Tasks' /d 'addcontextmenufiles,addcontextmenufolders,associatewithfiles,addtopath,runcode' /f
+reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{771FD6B0-FA20-440A-A002-3B3BAC16DC50}_is1' /v 'Inno Setup: Deselected Tasks' /d 'desktopicon' /f
+```
+
+## 症狀 C2:空白處右鍵有「以 Code 開啟」,點資料夾本身卻沒有
+
+不是壞掉:Win11 新式選單只在「空白處/桌面」直接顯示傳統項目,點「資料夾/檔案本身」時全部收進「顯示其他選項」,重開機也不會變。要第一層直接顯示就切回傳統選單(本機已於 2026-08-20 切換):
+
+```bash
+reg.exe add 'HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32' /ve /f
+powershell.exe -NoProfile -Command "Stop-Process -Name explorer -Force"   # explorer 會自動重啟
+```
+
+想改回新式選單:`reg.exe delete 'HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}' /f`,再重啟一次 explorer。
+
+## 症狀 C3:右鍵開 WSL 資料夾後,還要手動點左下角「連線至 WSL」
+
+WSL 擴充沒有自動連線設定(0.104.3 全部設定翻過),解法是轉接器 `C:\Users\peter\.vscode\open-with-code.vbs`:偵測到 `\\wsl.localhost\` 或 `\\wsl$\` 路徑,就改用 `Code.exe --remote wsl+<發行版> <Linux路徑>` 啟動,一開就是連好的;其他路徑照舊本機開。右鍵 command 要指到它——正確值就是 C1 修復指令那一套。
+
+轉接器遺失時的復原:本資料夾備有一份 [open-with-code.vbs](open-with-code.vbs),直接複製回去:
+
+```bash
+cp ~/.claude/skills/git/open-with-code.vbs /mnt/c/Users/peter/.vscode/open-with-code.vbs
+```
+
+(行尾必須是 CRLF;repo 這份已用 .gitattributes 的 `*.vbs -text` 鎖住不轉換,直接複製即可。)
+
+## 整條鏈驗證
+
+```bash
+cscript.exe //NoLogo 'C:\Users\peter\.vscode\open-with-code.vbs' '\\wsl.localhost\Ubuntu-24.04\home\peter'
+```
+
+跳出的 VS Code 視窗左下角顯示 `WSL: Ubuntu-24.04` 即全部正常。
+
+## 已知風險
+
+VS Code 自動更新重跑安裝程式時,可能把三個 command 鍵值改回預設 `"Code.exe" "%V"`——症狀是右鍵還能開,但又變回要手動連 WSL。重跑 C1 的修復指令即可。
