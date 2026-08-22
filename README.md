@@ -10,7 +10,7 @@
 | `/blacktea_change 一句話描述` | 專案已交付後想加功能／改呈現／修 bug | 釐清 → 改規格開 T-Rev 票 → 建造（每票過票級檢查）→ 增量稽核 → 修復 → 增量實測 → 補報告 |
 | `/blacktea_retro` | 專案結案後 | 翻整個 `.pipeline/` 歸納教訓，經你批准才寫進經驗包 |
 
-中斷（用量上限、關機、重啟）後再打一次同一個指令（不帶參數）就會從 `.pipeline/state.md` 的中斷點續跑。`/blacktea_plan 從階段 3 開始` 可以跳階段（門禁照查）。另外兩個一般技能 `/git`、`/vscode` 與流水線無關。
+中斷（用量上限、關機、重啟）後再打一次同一個指令（不帶參數）就會從 `.pipeline/state.md` 的中斷點續跑。`/blacktea_plan 從階段 3 開始` 可以跳階段（門禁照查）。另外三個一般技能 `/git`、`/vscode`、`/clawd` 與流水線無關。
 
 ## 三個資料夾各放什麼
 
@@ -30,7 +30,7 @@
 │   ├── agent1-tickets/       訪談官技能 c：照規格書拆工單＋自我稽核＋Codex 覆核
 │   ├── agent3-ticket-check/  稽核員技能 a：每張票做完親自重跑驗證，PASS 才准 commit
 │   ├── agent3-quality-check/ 稽核員技能 b：可讀、可維護、沒有多餘程式碼（不擋關）
-│   ├── git/  vscode/         一般技能
+│   ├── git/  vscode/  clawd/  一般技能（git 規範、VS Code 右鍵／連 WSL、桌面寵物）
 └── blacktea/   共用資料：lessons.md（經驗包，復盤官經你批准才寫）、templates/（專案腳印：settings.json、mcp.json）
 ```
 
@@ -91,5 +91,5 @@
 ## 改完引擎之後
 
 - `agents/` 與 `skills/` 的檔案改完幾秒內會自動重載，不用重啟；`commands/` 官方沒保證熱載入，改完保守起見重啟 Claude Code。
-- 重啟後可用 `/agents` 確認只有 agent2-build、agent3-review、agent4-run 三個分身；`/` 選單應有三個 blacktea 指令加 `/git`、`/vscode`（六個流水線技能不該出現）。
+- 重啟後可用 `/agents` 確認只有 agent2-build、agent3-review、agent4-run 三個分身；`/` 選單應有三個 blacktea 指令加 `/git`、`/vscode`、`/clawd`（六個流水線技能不該出現）。
 - 三個指令檔首的 `model: opus` **只管你打指令的那一回合**；訪談要來回多回合，之後整條流水線用的是 session 模型。想讓整條線都跑 opus，開工前先打 `/model opus` 把 session 模型切過去（分身的模型由各自 agents 檔決定，不受影響）。

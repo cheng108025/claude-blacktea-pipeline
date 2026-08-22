@@ -13,7 +13,8 @@
 | `agent3-ticket-check/` | 稽核員技能 a | 每做完一張票：親自重跑驗證方式、驗 DoD、跑測試、核對檔案，PASS 才准 commit | 不能（預載進 `agents/agent3_review.md`） |
 | `agent3-quality-check/` | 稽核員技能 b | 可讀、可維護、沒有多餘程式碼；只出 Medium/Low、不擋關 | 不能（預載進 `agents/agent3_review.md`） |
 | `git/` | 一般技能 | git／GitHub 規範與 WSL 急救 | 能（`/git`），Claude 也會依情況自動讀 |
-| `vscode/` | 一般技能 | VS Code 右鍵整合急救 | 能（`/vscode`） |
+| `vscode/` | 一般技能 | VS Code 右鍵整合急救（含一鍵連 WSL 轉接器） | 能（`/vscode`） |
+| `clawd/` | 一般技能 | Clawd on Desk 桌面寵物急救（WSL 配對、mirrored 網路、驗證） | 能（`/clawd`） |
 
 「不能直接打」的技能分兩種旗標設定：四個 **Read 接力**的技能（`blacktea-dispatch`、`agent1-*`）同時設 `user-invocable: false` 與 `disable-model-invocation: true`——對你、對 Claude 都隱藏，完全不進 context，只能靠角色檔用 Read 讀路徑載入；兩個**預載**的稽核技能（`agent3-*`）只能設 `user-invocable: false`（官方規則：設了 `disable-model-invocation` 就預載不進去），所以 Claude 理論上仍可能自行載入，靠描述裡的「不單獨使用」約束。這是刻意的：流水線的入口只有 `commands/` 的三個指令。
 
