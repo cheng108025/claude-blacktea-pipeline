@@ -8,5 +8,6 @@
 !agents/**
 !blacktea/
 !blacktea/**
+blacktea/export/
 !skills/
 !skills/**
