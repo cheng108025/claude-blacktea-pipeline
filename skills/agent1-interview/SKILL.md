@@ -2,6 +2,7 @@
 name: agent1-interview
 description: 訪談官技能 a「問到整個架構清楚」——Phase A 定調三問＋Phase B 評分表訪談迴圈，總分 ≥9 才停。由 ~/.claude/agents/agent1_plan.md 接力讀取，不單獨使用。
 user-invocable: false
+disable-model-invocation: true
 ---
 
 <!-- ══════════════ 給使用者的導讀（此區塊是給人看的，不是執行指示）══════════════
@@ -26,7 +27,7 @@ user-invocable: false
 - **前提**：`.pipeline/plan/` 已由 `~/.claude/agents/agent1_plan.md` 的 Phase 0 建好、Git 政策已問完。不符合 → 停，回報「請先跑 Phase 0」。
 - **產出**：`.pipeline/plan/01-requirements.md`（檔首「> 狀態：DRAFT」，含已確認內容與評分表）＋ 最終評分表；達門檻後回到 `agent1_plan.md` 接力 Phase C。
 
-出題前先 Read 兩份 references：`references/scorecard.md`（評分表與 ★ 規則）、`references/question-format.md`（每一題的標準構成與範例）。
+出題前先 Read 兩份 references：`~/.claude/skills/agent1-interview/references/scorecard.md`（評分表與 ★ 規則）、`~/.claude/skills/agent1-interview/references/question-format.md`（每一題的標準構成與範例）。
 
 ---
 
@@ -42,15 +43,15 @@ user-invocable: false
 
 ## 評分表（每輪更新，展示給使用者看）
 
-照 `references/scorecard.md` 的十面向計分；★ 面向依專案規模決定。
+照 `~/.claude/skills/agent1-interview/references/scorecard.md` 的十面向計分；★ 面向依專案規模決定。
 
 ## 訪談規則
 
 - 每輪**最多 4 題** 🔧，優先出**選擇題**，開放式問題留給沒辦法列選項的主題。順序永遠「先問會改變其他分支的問題」，避免下游問題白問。
-- **同一輪的題目必須彼此獨立**：任何一題的答案會影響另一題「該不該問」或「選項長什麼樣」，就必須把後者拆到下一輪。出題前逐一自問：「如果這題選了 A（或 B、C），另外幾題的問法會不會變？」會變 → 拆開。這條**優先於「一輪 4 題」**——寧可一輪只問 1 題，也不准把有相依關係的題目綁在同一輪（反例與正解見 `references/question-format.md`）。
+- **同一輪的題目必須彼此獨立**：任何一題的答案會影響另一題「該不該問」或「選項長什麼樣」，就必須把後者拆到下一輪。出題前逐一自問：「如果這題選了 A（或 B、C），另外幾題的問法會不會變？」會變 → 拆開。這條**優先於「一輪 4 題」**——寧可一輪只問 1 題，也不准把有相依關係的題目綁在同一輪（反例與正解見 `~/.claude/skills/agent1-interview/references/question-format.md`）。
   - **高影響決策一律單獨問**：技術路線、資料存哪、有沒有帳號系統、要不要做網站這類會分岔出一整串下游問題的決策，單獨一題問清楚再問下一批。
 - **能自查的事實自己查**：能從程式庫、文件或工具查證的事（現有專案用什麼框架、某套件支不支援某功能），自己查完直接用——只把真正需要取捨的**決策**留給使用者。
-- **每一題都要問得很詳細**，照 `references/question-format.md` 的四點構成出題，讓使用者完全不用猜你在問什麼。
+- **每一題都要問得很詳細**，照 `~/.claude/skills/agent1-interview/references/question-format.md` 的四點構成出題，讓使用者完全不用猜你在問什麼。
 - **模糊回答不放行**：使用者答「都可以」「大概吧」→ 不能就這樣記下，追問一次把它變具體；使用者明說「你決定就好」才照預設規則處理（見 scorecard）。
 - **實作偏好隔離**：使用者主動指定做法（「用 XX 套件」「存成 XX 格式」）→ 記進決策紀錄，標「**實作偏好（未驗證）**」——不當場假設它可行、也不當場反駁；留到出工單階段驗證。
 - **必問題——要不要自動化測試**：通常在問技術選型那一輪問一次：「要不要為核心邏輯寫自動化測試？」附白話說明（測試是長期維護的保險：以後改東西能立刻知道有沒有改壞；代價是開發時間變長。自己用的小工具可以不寫，打算長期維護就建議寫）。答案記進規格書「技術選型」章；要寫的話，工作單就要有對應的測試 ticket 與 DoD。

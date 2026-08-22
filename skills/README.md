@@ -15,7 +15,7 @@
 | `git/` | 一般技能 | git／GitHub 規範與 WSL 急救 | 能（`/git`），Claude 也會依情況自動讀 |
 | `vscode/` | 一般技能 | VS Code 右鍵整合急救 | 能（`/vscode`） |
 
-「不能直接打」的技能在 frontmatter 設了 `user-invocable: false`：它們不會出現在 `/` 選單，也不會在你打 `/agent3-ticket-check` 時執行——它們只在被對應的角色檔讀取或預載時生效。這是刻意的：流水線的入口只有 `commands/` 的三個指令。
+「不能直接打」的技能分兩種旗標設定：四個 **Read 接力**的技能（`blacktea-dispatch`、`agent1-*`）同時設 `user-invocable: false` 與 `disable-model-invocation: true`——對你、對 Claude 都隱藏，完全不進 context，只能靠角色檔用 Read 讀路徑載入；兩個**預載**的稽核技能（`agent3-*`）只能設 `user-invocable: false`（官方規則：設了 `disable-model-invocation` 就預載不進去），所以 Claude 理論上仍可能自行載入，靠描述裡的「不單獨使用」約束。這是刻意的：流水線的入口只有 `commands/` 的三個指令。
 
 ## 兩種接力方式
 
@@ -24,4 +24,4 @@
 
 ## 新增技能的慣例
 
-資料夾名就是技能名（全小寫、連字號）；`SKILL.md` 開頭放 frontmatter（`name`、`description`、`user-invocable`）與「給使用者的導讀」；大表格放 `references/`；跨檔引用一律寫絕對路徑 `~/.claude/...`。改完在 `~/.claude` commit 並重啟 Claude Code。
+資料夾名就是技能名（全小寫、連字號）；`SKILL.md` 開頭放 frontmatter（`name`、`description`、`user-invocable`，Read 接力的再加 `disable-model-invocation`）與「給使用者的導讀」；大表格放 `references/`；所有引用（包括技能引用自己的 `references/`）一律寫絕對路徑 `~/.claude/...`——因為技能是在專案目錄下被 Read 進來的，相對路徑會找不到檔。改完在 `~/.claude` commit（skills 會自動重載）。

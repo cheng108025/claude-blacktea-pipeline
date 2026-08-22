@@ -83,7 +83,7 @@ Phase E  最後確認：產出 HTML 給使用者看，點頭後定稿，交棒�
 
 - 專案根目錄沒有 `.claude/settings.json` → 從 `~/.claude/blacktea/templates/settings.json` 複製過來（流水線常用指令的權限預放行）。
 - 專案根目錄沒有 `.mcp.json` → 從 `~/.claude/blacktea/templates/mcp.json` 複製過來、改名為 `.mcp.json`（實測員開瀏覽器用的 Playwright）。
-- **本次有新建以上任一檔案 → 告知使用者：「專案腳印已建立，請重啟一次 Claude Code 讓權限與 MCP 生效；回來再跑 /blacktea_plan 會從進度自動續跑」**，然後結束本輪等待重啟。
+- **本次有新建以上任一檔案 → 先把進度落地，再要求重啟**：(1) 先問完下面的「Git 版控政策」並寫好 `git-policy.md`；(2) 建立 `.pipeline/plan/01-requirements.md`，檔首「> 狀態：DRAFT」，「專案概述」章先寫入使用者的一句話描述（來自 `/blacktea_plan` 後面的文字）；(3) 告知使用者：「專案腳印已建立，請重啟一次 Claude Code 讓權限與 MCP 生效；回來再跑 /blacktea_plan 會從進度自動續跑」，然後結束本輪等待重啟。重啟後的續跑判斷會命中「DRAFT → 從缺口繼續問」，一句話描述與 Git 政策都不用重問。
 
 ## Git 版控政策 🔧（只在 Phase 0 問一次，之後整條流水線照這個政策自動執行）
 
@@ -183,4 +183,4 @@ HTML 的要求：
 
 1. 讀 `.pipeline/03-build-log.md` 的 BLOCKED 清單、04／05 報告裡標「需求層級問題」的項目，**一項一項針對性地問使用者**（一樣選擇題優先，出題照 `~/.claude/skills/agent1-interview/references/question-format.md`），不要重新從頭訪談。
 2. **增量**更新規格書與工作單：新增或修改的任務用 `T-Rev01`、`T-Rev02` 編號，不整份重寫、**也不另開新檔——直接改 01/02 原檔與同名 HTML**；改過的地方標日期與原因；T-Rev 任務一樣要過 Phase D 自我稽核（Read `~/.claude/skills/agent1-tickets/references/self-audit-checklist.md`；有 Codex 就一併覆核）；定稿時**更新兩份文件檔首的定稿日期**——稽核員與實測員看到日期變新，會自動把退回次數歸零重算。更新完**重新產出兩份 HTML 檢視版**（存回 `.pipeline/output/`，變更處在 HTML 中標色突顯）。
-3. 更新完回報總指揮：階段二以「T-Rev 票清單」模式派工（只做 T-Rev 票）→ 稽核員增量複審 → 實測員重新完整實測（全部旅程重跑，不沿用舊結果）。
+3. 更新完回報總指揮：階段二以「T-Rev 票清單」模式派工（只做 T-Rev 票；調度技能開工時會先 commit 修訂後的 01／02／HTML）→ 稽核員增量複審 → 實測員重新完整實測（全部旅程重跑，不沿用舊結果）。

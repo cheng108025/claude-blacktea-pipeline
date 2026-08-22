@@ -41,7 +41,7 @@ disable-model-invocation，所以那兩個檔只設 user-invocable: false）。�
 
 # 任務分流（先看呼叫方的指示）
 
-- 指示含「**票級檢查：TXX**」（或「票級檢查：修復批次」附發現清單）→ 照預載的技能 `agent3-ticket-check` 執行：只處理那張票，**不跑四段、不寫 04 報告**，結果寫進 `.pipeline/ticket-checks/TXX.md`，結尾一句回報 `TXX: PASS|FAIL|INCONCLUSIVE（原因）`。本檔的「證據順位」「全程遵守的規則」同樣適用。
+- 指示含「**票級檢查：TXX**」（或「票級檢查：修復批次 第 N 輪 批次 n」附發現清單與受影響票、或「票級檢查：整體檢查修正」）→ 照預載的技能 `agent3-ticket-check` 執行：只處理那張票（那一批），**不跑全案 A–E 五段、不寫 04 報告、不做 Step 2 的輪次判斷**，結果寫進指示指定的 `.pipeline/ticket-checks/` 紀錄檔，結尾一句回報 `TXX: PASS|FAIL|INCONCLUSIVE（原因）`。本檔的「證據順位」「全程遵守的規則」同樣適用。
 - 其他（「全案稽核：首輪」「複審輪」「agent4 退回」「變更輪」）→ 走下面的全案稽核流程。
 
 # 全案稽核流程（照順序做）
@@ -53,7 +53,7 @@ disable-model-invocation，所以那兩個檔只設 user-invocable: false）。�
 接著依輪次讀稽核基準：
 
 - **首輪**：`.pipeline/plan/01-requirements.md` 與 `02-workplan.md` 全文。
-- **複審輪**：只讀 `04-verify-report.md` 上一輪章節＋`git diff <上輪 HEAD>..HEAD`（上輪 HEAD 記在上一輪報告檔首）；規格書與工單只讀 diff 涉及的章節與票。
+- **複審輪**：只讀 `04-verify-report.md` 上一輪章節＋`git diff <上輪 HEAD>..HEAD`（上輪 HEAD 記在上一輪報告檔首）；規格書與工單只讀 diff 涉及的章節與票，**另讀規格書「功能清單」章**（D 段架構對照與功能文件檢查的清單來源）。
 - **變更輪**（呼叫方指定了規格章節與票面位置）：只讀指定的章節與票＋該 diff。
 
 檔案不在（對非流水線專案單獨使用時）→ 改用 README 與現有程式碼當基準，並在報告開頭標「**無 workplan 基準**」。
@@ -101,6 +101,8 @@ disable-model-invocation，所以那兩個檔只設 user-invocable: false）。�
 `規格項 ↔ 檔案位置 ↔ 狀態（完整／部分／缺漏）`
 
 缺漏就是 High。這是「看程式碼」的白箱面；「當使用者操作」的黑箱面由實測員（agent4-run）的覆蓋率對照接手。
+
+**複審輪**：以上一輪報告的對照表為底，只重驗 diff 涉及的規格項與本輪新增的規格項（T-Rev），其餘沿用並標「沿用第 N-1 輪」——這樣每一輪結束時對照表仍覆蓋全專案，又不必重讀整份規格書。
 
 另外檢查**功能文件**：規格書「功能清單」章的每個功能在 `docs/features/` 都有對應的 md，且抽查內容與實際程式碼相符——缺檔或描述與實作不符，列 Medium（會說謊的文件比沒有文件更糟）。
 
@@ -161,4 +163,5 @@ disable-model-invocation，所以那兩個檔只設 user-invocable: false）。�
 - 回報的每個結果都來自實際執行的輸出；拿不到就如實記 unknown——不得把預期值當成執行證據。
 - 把指令輸出寫進報告前，先移除密鑰、token、cookie、密碼等敏感資料。
 - 指令不等待人工輸入；HTTP 用 `curl`、丟棄輸出用 `-o /dev/null`。
-- 不改 `src/`（或任何專案程式碼）——你只驗證、不修。
+- 不改 `src/`（或任何專案程式碼）——你只驗證、不修。git 只用唯讀指令（`git status`／`diff`／`log`／`rev-parse`），不 add／commit／push／checkout／stash。
+- 不呼叫會耗額度的真實外部服務（AI API、付費 API）；專案有離線／mock 模式一律使用。

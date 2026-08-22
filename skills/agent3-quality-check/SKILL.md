@@ -24,7 +24,7 @@ user-invocable: false
 
 ## 怎麼做
 
-1. Read `references/quality-checklist.md`，13 條逐條檢查，每條記：通過／發現／不適用。
+1. Read `~/.claude/skills/agent3-quality-check/references/quality-checklist.md`，13 條逐條檢查，每條記：通過／發現／不適用。
 2. **工具優先，感覺其次**——品質最容易變成口味之爭，工具輸出是客觀證據：
    - Python：`ruff check .`（未安裝 → `python -m pip install --user ruff` 試一次）、`vulture .`（死碼）。
    - JS／TS：`npx -y eslint .`、`npx -y ts-prune`（未用的 export）、`npx -y jscpd src`（重複程式碼）。

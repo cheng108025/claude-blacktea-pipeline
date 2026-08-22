@@ -90,4 +90,6 @@
 
 ## 改完引擎之後
 
-`commands/`、`agents/`、`skills/` 都不是熱載入——改完要**重啟 Claude Code** 才生效。重啟後可用 `/agents` 確認只有 agent2-build、agent3-review、agent4-run 三個分身，`/` 選單只有三個 blacktea 指令。
+- `agents/` 與 `skills/` 的檔案改完幾秒內會自動重載，不用重啟；`commands/` 官方沒保證熱載入，改完保守起見重啟 Claude Code。
+- 重啟後可用 `/agents` 確認只有 agent2-build、agent3-review、agent4-run 三個分身；`/` 選單應有三個 blacktea 指令加 `/git`、`/vscode`（六個流水線技能不該出現）。
+- 三個指令檔首的 `model: opus` **只管你打指令的那一回合**；訪談要來回多回合，之後整條流水線用的是 session 模型。想讓整條線都跑 opus，開工前先打 `/model opus` 把 session 模型切過去（分身的模型由各自 agents 檔決定，不受影響）。

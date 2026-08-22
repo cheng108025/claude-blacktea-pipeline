@@ -2,6 +2,7 @@
 name: agent1-tickets
 description: 訪談官技能 c「照規格書拆任務」——Phase D，出 02-workplan.md 工作單、自我稽核 7 項、可選 Codex 覆核。由 ~/.claude/agents/agent1_plan.md 接力讀取，不單獨使用。
 user-invocable: false
+disable-model-invocation: true
 ---
 
 <!-- ══════════════ 給使用者的導讀（此區塊是給人看的，不是執行指示）══════════════
@@ -30,10 +31,10 @@ user-invocable: false
 
 ## 流程
 
-1. Read `references/ticket-template.md`（六欄定義與範例）與 `references/workplan-structure.md`（檔首 DRAFT、T01、功能票、README 票、文末聲明），照著寫出全部 ticket。
+1. Read `~/.claude/skills/agent1-tickets/references/ticket-template.md`（六欄定義與範例）與 `~/.claude/skills/agent1-tickets/references/workplan-structure.md`（檔首 DRAFT、T01、功能票、README 票、文末聲明），照著寫出全部 ticket。
 2. 逐張套用下面「每張 ticket 的品質要求」。
-3. Read `references/self-audit-checklist.md`，7 項逐條做完並展示結果；待問清單不空就回去追問（最多 2 輪 🔧）。
-4. Read `references/codex-review.md`，問使用者要不要外部覆核；有跑就依分級處理，重度缺口處理完才能交棒。
+3. Read `~/.claude/skills/agent1-tickets/references/self-audit-checklist.md`，7 項逐條做完並展示結果；待問清單不空就回去追問（最多 2 輪 🔧）。
+4. Read `~/.claude/skills/agent1-tickets/references/codex-review.md`，問使用者要不要外部覆核；有跑就依分級處理，重度缺口處理完才能交棒。
 5. 回到 `~/.claude/agents/agent1_plan.md`，接力 Phase E（產 HTML、請使用者確認、定稿）。
 
 ## 每張 ticket 的品質要求

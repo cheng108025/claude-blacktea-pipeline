@@ -48,7 +48,7 @@ disable-model-invocation: true
 - **已交付**（state 顯示完成 **且** `.pipeline/output/FINAL-REPORT.md` 存在）→ 不要直接進階段一。用 AskUserQuestion 問一題：「偵測到這個專案已於 <完工日期> 交付（HEAD <sha>）。你這次是要**修改既有專案**（加功能／改呈現／修 bug）還是**重做一個全新專案**？」
   - 選「修改既有專案」（預設建議）→ 告訴使用者「請改用 `/blacktea_change <你要改什麼>`」並停止；若使用者在附加文字已經寫了變更描述，直接替他轉述該指令的用法（帶上原描述），不要在這裡偷跑變更流程。
   - 選「全新專案」→ 確認 `.pipeline/` 要歸檔還是覆蓋（預設：把舊的整個目錄改名為 `.pipeline-<完工日期>/` 保留），然後從階段一開始。
-- **交付前需求變更**（state 未完成、工作單已定稿，且 03 有 BLOCKED 屬需求缺漏、或 04／05 有「需求層級問題」）→ Read `~/.claude/agents/agent1_plan.md`，走它文末的**需求變更子流程**（需要使用者），完成後回階段二以「T-Rev 票清單」模式派工。
+- **交付前需求變更**（state 未完成、工作單已定稿，且 03 有 BLOCKED 屬需求缺漏、或 04／05 有「需求層級問題」）→ Read `~/.claude/agents/agent1_plan.md`，走它文末的**需求變更子流程**（需要使用者），完成後回階段二以「T-Rev 票清單」模式派工（調度技能開工時會先把修訂後的規格書、工單與 HTML commit 進去，你不用自己 commit）。
 - **有未完成進度** → 告訴使用者目前卡在哪個階段、第幾輪，**從中斷點續跑**（階段二的在途票由調度技能依 state.md 重新票級檢查後才 commit）。
 - **state 顯示完成但 FINAL-REPORT 不存在** → 視為階段五未完成，從階段五續跑。
 
@@ -58,7 +58,7 @@ disable-model-invocation: true
 
 Read `~/.claude/agents/agent1_plan.md`，**照它的劇本執行**（Phase 0 → 接力三個技能 → Phase E），把上面的「一句話描述」當作 Phase A 第 1 題的已知答案。訪談在主對話進行（subagent 沒有 AskUserQuestion，不能把訪談派出去）。Phase 0 若新建了專案腳印，它會要求使用者重啟 Claude Code——照辦並結束本輪，重啟後再打 `/blacktea_plan` 會續跑。
 
-使用者在 Phase E 確認、工作單定稿後 → 更新 state.md → 進入階段二，**之後不再徵詢使用者，自動接力到底**。
+使用者在 Phase E 確認、工作單定稿後 → 更新 state.md → 進入階段二，**之後不再徵詢使用者，自動接力到底**。（訪談官不 commit；規格書、工單、HTML 由調度技能在階段二開工時先 commit 進去。）
 
 **這也是為什麼 Git 版控政策要在 Phase 0 就問完**（要不要建 GitHub repo／私有或公開／要不要每票 push）：階段二之後不再打斷使用者，調度技能直接照 `.pipeline/plan/git-policy.md` 自動執行。政策檔不存在就不准自行建 repo 或 push。
 
@@ -131,7 +131,7 @@ spawn `agent4-run` subagent，指示「全旅程實測」；重測時可加「�
 4. waivers 清單（如有，含理由）
 5. 被跳過的階段（如有，註明原因）
 
-寫完用 dispatch 的「**單 commit**」模式 commit（依政策 push）。更新 state.md 為「完成」。向使用者總結：做了什麼、通過哪些檢查、已知限制、報告與證據位置。**最後提醒：跑一次 `/blacktea_retro` 復盤，把這一案的經驗沉澱進經驗包，之後的專案會直接受益。**
+寫完用 dispatch 的「**單 commit**」模式 commit（檔案：`.pipeline/output/FINAL-REPORT.md` 與尚未入庫的 `.pipeline/output/*.html`；訊息 `docs: FINAL-REPORT`；依政策 push）。更新 state.md 為「完成」。向使用者總結：做了什麼、通過哪些檢查、已知限制、報告與證據位置。**最後提醒：跑一次 `/blacktea_retro` 復盤，把這一案的經驗沉澱進經驗包，之後的專案會直接受益。**
 
 ## 進度記錄（state.md，每個階段開始與結束都要更新）
 

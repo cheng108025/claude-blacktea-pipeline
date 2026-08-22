@@ -2,6 +2,7 @@
 name: agent1-spec
 description: 訪談官技能 b「把需求寫成規格書」——Phase C，把訪談結果整理成 01-requirements.md（五個必備章不可省）。由 ~/.claude/agents/agent1_plan.md 接力讀取，不單獨使用。
 user-invocable: false
+disable-model-invocation: true
 ---
 
 <!-- ══════════════ 給使用者的導讀（此區塊是給人看的，不是執行指示）══════════════
@@ -24,7 +25,7 @@ user-invocable: false
 
 ## 原則
 
-- 章節**依專案複雜度彈性調整**——`references/spec-outline.md` 是完整菜單，不是硬性規定：小工具可以合併或省略用不到的章，中大型專案可以自行加章（例如部署、效能）。原則：**寧可整章省略，不准某章寫一半**；省略的章在「決策紀錄」用一句話記原因。
+- 章節**依專案複雜度彈性調整**——`~/.claude/skills/agent1-spec/references/spec-outline.md` 是完整菜單，不是硬性規定：小工具可以合併或省略用不到的章，中大型專案可以自行加章（例如部署、效能）。原則：**寧可整章省略，不准某章寫一半**；省略的章在「決策紀錄」用一句話記原因。
 - 規格書裡**禁止出現「待定」**——每件事只能是「已確認」（使用者說的）或「預設」（你選的，寫明理由、標註可改）。
 - 有寫的每一章都要具體到「下游不需要再猜」的程度——後面的建造者、稽核員、實測員中途沒辦法向任何人提問。
 
@@ -42,7 +43,7 @@ user-invocable: false
 
 ## 怎麼寫
 
-1. Read `references/spec-outline.md`，照菜單逐章寫（技術選型章開頭必放分層技術棧表；全域驗收清單必須自給自足）。
+1. Read `~/.claude/skills/agent1-spec/references/spec-outline.md`，照菜單逐章寫（技術選型章開頭必放分層技術棧表；全域驗收清單必須自給自足）。
 2. 決策紀錄集中列出：所有「（預設，可改）」、「實作偏好（未驗證）」、被省略的章與原因。
 3. 文末放問答紀錄與最終評分表。
 4. 寫完回到 `~/.claude/agents/agent1_plan.md`，接力 Phase D（Read `~/.claude/skills/agent1-tickets/SKILL.md`）。
