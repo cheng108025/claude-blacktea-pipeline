@@ -9,7 +9,7 @@
 
 （尚無條目——跑完第一個專案後執行 /blacktea_retro）
 
-## 訪談官（agent1_plan）
+## 訪談官（agents/agent1_plan.md ＋ skills/agent1-interview／spec／tickets）
 
 （尚無條目）
 
@@ -17,7 +17,7 @@
 
 （尚無條目）
 
-## 稽核員（agent3-review）
+## 稽核員（agent3-review，含票級檢查與品質檢查）
 
 （尚無條目）
 
@@ -25,6 +25,6 @@
 
 （尚無條目）
 
-## 流程與總指揮（blacktea_plan／blacktea_retro）
+## 流程與總指揮（blacktea_plan／blacktea_change／blacktea_retro／skills/blacktea-dispatch）
 
 （尚無條目）

@@ -1,6 +1,7 @@
 ---
 description: 紅茶流水線復盤官——專案完工後歸納教訓，經你批准寫入全域經驗包，讓下一個專案直接受益
 model: opus
+disable-model-invocation: true
 ---
 
 <!-- ══════════════ 給使用者的導讀（此區塊是給人看的，不是執行指示）══════════════
@@ -27,11 +28,11 @@ model: opus
 
 ## Step 1：讀取本案全部工件
 
-讀專案的 `.pipeline/`：`state.md`（跑了幾階段幾輪）、`plan/01-requirements.md` 與 `02-workplan.md`（含 T-Rev 需求變更痕跡）、`03-build-log.md`（BLOCKED、偏離事項、修復輪次、反證紀錄）、`04-verify-report.md`（發現清單、closed／withdrawn／open、環境問題）、`05-e2e-report.md`（FAIL 與覆蓋）、`waivers.md`、`output/FINAL-REPORT.md`。另讀現有的 `~/.claude/blacktea/lessons.md`（比對用）。
+讀專案的 `.pipeline/`：`state.md`（跑了幾階段幾輪）、`plan/01-requirements.md` 與 `02-workplan.md`（含 T-Rev 需求變更痕跡）、`03-build-log.md`（索引：票狀態、票級檢查結果、BLOCKED／FAILED、修復輪次）與 `build-log/*.md`（各票的偏離事項、反證紀錄）、`ticket-checks/*.md`（稽核員票級檢查：哪些票第一次沒過、為什麼）、`04-verify-report.md`（發現清單、closed／withdrawn／open、環境問題）、`05-e2e-report.md`（FAIL 與覆蓋）、`evidence/`、`waivers.md`、`output/FINAL-REPORT.md`。另讀現有的 `~/.claude/blacktea/lessons.md`（比對用）。四個角色各自是誰、住在哪個檔，見 `~/.claude/agents/README.md`。
 
 ## Step 2：統計事實（先數字、後判斷）
 
-整理一張小表：訪談幾輪、有沒有需求變更（T-Rev）、建造 BLOCKED 幾張／原因、稽核幾輪／發現數／誤報撤回數、實測幾輪／FAIL 數、waiver 幾條、環境問題幾件。**數字是教訓的證據基礎，不准跳過這步直接寫感想。**
+整理一張小表：訪談幾輪、有沒有需求變更（T-Rev）、建造 BLOCKED 幾張／原因、票級檢查 FAIL 幾次／哪些票被退回重做、稽核幾輪／發現數／誤報撤回數、實測幾輪／FAIL 數、waiver 幾條、環境問題幾件。**數字是教訓的證據基礎，不准跳過這步直接寫感想。**
 
 ## Step 3：歸納教訓候選（每條都要能回答「下次哪個角色在哪一步要做什麼不一樣」）
 
@@ -81,7 +82,7 @@ model: opus
 
 ## 例外：引擎修改提案（門檻高，走另一條路）
 
-教訓若屬於「**引擎規則本身錯了**」（例如稽核員的某條判準系統性誤報、工單規則有結構性漏洞）——**不寫經驗包、也不直接改 agent 檔**。單獨列一節「引擎修改提案」：哪個檔案、原文、建議改文、理由與本案證據。使用者明確同意才動 `~/.claude/` 的引擎檔案，動完立刻在 `~/.claude` 執行 git commit——那就是還原點。
+教訓若屬於「**引擎規則本身錯了**」（例如稽核員的某條判準系統性誤報、工單規則有結構性漏洞）——**不寫經驗包、也不直接改引擎檔**（`~/.claude/commands/`、`agents/`、`skills/` 都算）。單獨列一節「引擎修改提案」：哪個檔案、原文、建議改文、理由與本案證據。使用者明確同意才動 `~/.claude/` 的引擎檔案，動完立刻在 `~/.claude` 執行 git commit——那就是還原點。
 
 # 全程遵守的規則
 
