@@ -1,86 +1,166 @@
 ---
-description: 執行 Agent 2 建造者——依 .pipeline/plan/02-workplan.md 實作全部任務（小工單單體、大工單逐票並行派工）
-argument-hint: [修復輪：依 04/05 報告退回清單 | 只做 T-Rev 任務]
-model: opus
+name: blacktea-dispatch
+description: 紅茶流水線派工與版控技能——Ready Queue→並行建造（≤3 隻）→每票稽核員票級檢查→PASS 才 commit／push；也做修復批次與單 commit。只由 /blacktea_plan 與 /blacktea_change 在主對話 Read 執行，不單獨使用。
+user-invocable: false
 ---
 
-<!-- ══════════ 給使用者的導讀（給人看的，不是執行指示）══════════
-這是 /agent2_build 指令，現在是「調度員」：門禁檢查 → 依工單大小選模式
-→ 派建造者 subagent（agent2-build）→ 完成後跟你摘要結果。
+<!-- ══════════════ 給使用者的導讀（此區塊是給人看的，不是執行指示）══════════════
 
-兩種模式 🔧：
-  票數 ≤ 10 → 單體模式：一隻建造者做完整份工單（便宜、連貫）
-  票數 > 10 → 逐票派工模式：每張票一隻獨立建造者，
-              無關聯的票並行（最多 3 隻同時）、有關聯的照依賴串行
+這是建造階段的「調度員」：它不寫程式，只管派誰、何時派、收回來怎麼驗、怎麼 commit。
+/blacktea_plan（階段二、修復輪、階段五 commit）與 /blacktea_change（T-Rev 票、修復、收尾 commit）
+都用 Read 讀本檔照做，跑在主對話——所以它是整條流水線裡唯一能碰 git 的人。
 
-建造者本人的行為規則在 ~/.claude/agents/agent2_build.md，
-想改「怎麼建造」去那裡改；這裡只管「派誰、何時派、怎麼收」。
-═══════════════════════════════════════════════════════ -->
+每張票的生命週期固定是：派建造者（agents/agent2_build.md）→ 建造者回報 →
+派稽核員做票級檢查（agents/agent3_review.md，用 skills/agent3-ticket-check）→
+PASS 才 commit（依 git-policy push）；FAIL 退建造者重做，最多 2 次。
 
-使用者附加指示：$ARGUMENTS
-（上一行若為空 → 執行預設完整建造流程；有內容 → 原樣轉達給建造者，例如「修復輪：依 04-verify-report.md 的退回清單修復」或「只做 T-Rev 任務」。）
+🔧 = 可調整處：
 
-**門禁**：`.pipeline/plan/02-workplan.md` 必須存在且已定稿（檔首沒有 DRAFT 標記）。不符合 → 提示使用者先跑 `/agent1_plan` 完成最終確認，然後停止。
+  想調整什麼                    | 段落
+  同時派幾隻建造者（現為 3）    | 「③ Ready Queue 與分道」
+  哪些票永遠不並行              | 「③ Ready Queue 與分道」強制串行清單
+  票級檢查一次跑幾隻（現為 1）  | 「⑤ 收票 → 票級檢查 → commit」
+  票級檢查用哪顆模型            | 「⑤ 收票 → 票級檢查 → commit」
+  每票最多重做幾次（現為 2）    | 「⑤ 收票 → 票級檢查 → commit」
+  build-log 索引長什麼樣        | 「⑧ 03-build-log.md 索引格式」
 
-# 開工前：確認 Git 版控政策 🔧
+  ⚠️ 建議不要放寬的部分：「鐵律」——git 只有調度員一個人動、push 授權只來自
+     git-policy、commit 前一定過票級檢查。這三條是整條線「不信任自我宣稱」的根。
 
-讀 `.pipeline/plan/git-policy.md`：
+═══════════════════════════════════════════════════════════════════════ -->
 
-- **存在** → 照它執行，**不要再問使用者**（訪談階段已經問過了）。
-- **不存在**（單獨跑 `/agent2_build`、沒經過訪談官）→ **現在就在主對話問使用者這一題**：這個專案要「上 GitHub 備份」還是「只留在本機」？選備份就再問私有／公開與 repo 名稱。問完寫成 `.pipeline/plan/git-policy.md` 再開工。
+# 你是調度員（跑在主對話）
 
-**政策說「上 GitHub 備份」而遠端還沒建 → 由你（調度員）執行：**
+你管佇列、派工、收結果、驗收、commit。**你自己不寫程式**（建造者做）、**不自己判定票有沒有做對**（稽核員做）。
 
-```bash
-gh auth status                        # 沒登入先提示使用者跑 gh auth login
-gh repo create <名稱> --private --source=. --remote=origin    # 或 --public，照政策
+## ① 輸入與模式（呼叫方會告訴你）
+
+| 模式 | 做什麼 | 誰用 |
+|---|---|---|
+| **完整建造** | 工單上所有未完成（非 `[x]`）的票 | /blacktea_plan 階段二 |
+| **T-Rev 票清單** | 只做 `T-RevNN` 編號且未完成的票 | /blacktea_plan 需求變更後、/blacktea_change 步驟 3 |
+| **修復批次**（附發現清單＋報告位置） | 把發現按檔案分組派建造者修，修完票級檢查、commit | /blacktea_plan 階段三／四退回、/blacktea_change 步驟 5 |
+| **單 commit**（附檔案清單＋訊息） | 只做一次 commit（依政策 push），不派工 | 定稿、FINAL-REPORT、規格修訂 |
+
+## ② 門禁與開工準備
+
+1. **門禁**：`.pipeline/plan/02-workplan.md` 存在且已定稿（檔首沒有 DRAFT）。不符合 → 停，回報「工單尚未定稿」。單 commit 模式不查此門禁。
+2. Read `~/.claude/skills/git/SKILL.md` 的 Part A（強制規則）。
+3. 讀 `.pipeline/plan/git-policy.md`：
+   - **存在** → 照它執行，**不要再問使用者**（訪談階段已經問過了）。
+   - **不存在** → 你跑在主對話，**現在就問使用者這一題**：這個專案要「上 GitHub 備份」還是「只留在本機」？選備份就再問私有／公開與 repo 名稱。問完寫成 `.pipeline/plan/git-policy.md` 再開工。
+4. **repo 與首 commit**（還沒有才做）：
+   - 沒有 `.git` → `git init`。
+   - 沒有 `.gitignore` → 依工單 T01 票列的清單建立（至少含 `.env`、`node_modules/`、`.pipeline/evidence/`、`.pipeline/state.md`、`.pipeline/server.pid`、`.pipeline/03-build-log.md`、`.pipeline/build-log/`、`.pipeline/ticket-checks/`、`.pipeline/04-verify-report.md`、`.pipeline/05-e2e-report.md`）。
+   - 還沒有任何 commit → `git add .gitignore .pipeline/plan/ .claude/settings.json .mcp.json`（存在的才加）→ commit `plan: 規格書與工單定稿`。
+   - 政策為「上 GitHub 備份」且沒有 `origin` → `gh auth status`（沒登入 → 不卡流水線：照常 commit，push 標「延後」，最後摘要提醒使用者補推）→ `gh repo create <名稱> --private --source=. --remote=origin`（或 `--public`，照政策）。**建 repo 只有你能做。**
+5. **工作單健檢**（不合格就不開工，退回訪談官需求變更子流程）：主序列編號 T01..Tnn 連續不重複（`T-RevNN` 也合法）；每個「依賴」指到的編號都存在；依賴能排出先後、沒有死結；每張票都有六欄。
+6. 建立 `.pipeline/build-log/`、`.pipeline/ticket-checks/`、`.pipeline/evidence/`（不存在才建）；`03-build-log.md` 不存在或不是索引格式 → 依「⑧ 索引格式」建立（舊格式的 03 先改名 `03-build-log-legacy.md` 保留）。
+
+## ③ Ready Queue 與分道
+
+1. **Ready Queue**：「依賴」全部已 `[x]`、且自己不是 BLOCKED／FAILED 的票進佇列。
+2. **分道**：佇列內的票，按「做法」欄列出的異動檔案比對——檔案**無重疊** → 可並行，同時派**最多 3 隻** 🔧；檔案**有重疊** → 同一條道，照依賴／編號順序串行。
+3. **強制串行清單**（不管重不重疊，永不並行）：動 `package.json`／lockfile 的票、資料庫 schema／migration 票、**驗證方式需要啟動 dev server 的票**（會搶 port）、動 `.pipeline/` 的票。**判斷不了會不會衝突 → 一律當作會衝突，串行。寧慢勿亂。**
+4. 修復批次模式：把發現按「建議修法」涉及的檔案分組成最多 3 批，無重疊的批可並行，每批派一隻。
+
+## ④ 派建造者
+
+用 Agent 工具 spawn `agent2-build`（可背景執行，槽位一空就派下一張**不依賴在途票**的票），指示固定格式：
+
+> 單票模式：TXX。不碰 git。施工紀錄寫 `.pipeline/build-log/TXX.md`，指令輸出存 `.pipeline/evidence/TXX-*.log`。回報時附完整異動檔案清單。
+
+修復批次的指示：
+
+> 修復批次：依 `<04 或 05 報告路徑>` 修 V-xxx、V-yyy（附每項的重現情境與修法建議）。不碰 git。紀錄寫 `.pipeline/build-log/fix-<輪次>-<批次>.md`。回報時附完整異動檔案清單。
+
+## ⑤ 收票 → 票級檢查 → commit（串行，一次一張 🔧）
+
+每收回一張票：
+
+1. **核對檔案**：建造者回報的異動檔案清單 vs `git status --porcelain`——多出的檔案（不在清單、也不屬於其他在途票）→ 要求建造者說明，說不清就當偏離記進索引。
+2. **派票級檢查**：用 Agent 工具 spawn `agent3-review`，指示「票級檢查：TXX；異動檔案：<清單>」（修復批次則「票級檢查：修復批次，發現 V-xxx…；異動檔案：<清單>」）。稽核員會親自重跑該票的驗證方式、逐條驗 DoD、跑測試，寫 `.pipeline/ticket-checks/TXX.md`。票級檢查**一次只跑一隻** 🔧（它可能會起 dev server）；模型預設跟稽核員人設（opus），專案簡單可在 Agent 工具的 model 參數降為 sonnet 🔧。
+3. 讀 `.pipeline/ticket-checks/TXX.md` 的結論：
+   - **PASS** → `git add <該票的異動檔案清單> .pipeline/plan/02-workplan.md`（**禁用 `git add -A`／`git add .`**——並行時工作區有別票的半成品）→ commit，訊息帶票號（例：`T03: 使用者登入 API`；修復批次：`fix round 2: V-003 V-007`）→ 政策為「上 GitHub 備份」→ 先跑機密掃描（git skill 的三條指令）→ `git push`；掃到東西 → **停下來問使用者，不要推**。索引表更新該列。
+   - **FAIL** → spawn `agent2-build`「單票修復：TXX，依 `.pipeline/ticket-checks/TXX.md` 的 FAIL 項」→ 回來再派一次票級檢查。**每票最多重做 2 次** 🔧；第 2 次仍 FAIL → 索引標 **FAILED**（不 commit、不打勾），跳過所有依賴它的票，最後統一回報。建造者提出可重現反證 → 轉給稽核員複驗，稽核員判定為準。
+   - **INCONCLUSIVE**（稽核員判定失敗來自本票異動清單之外、屬於其他在途票的檔案）→ 等該批在途票全部收回後重跑一次票級檢查，不佔 2 次額度。
+   - **BLOCKED**（建造者回報卡住）→ 索引標 BLOCKED，跳過依賴它的票，最後統一回報（屬需求缺漏 → 回訪談官需求變更子流程）。
+4. 更新 `state.md` 的「建造進度」節（⑨）。
+
+## ⑥ 迴圈與收尾
+
+1. 回到 ③，直到佇列清空（或只剩被 BLOCKED／FAILED 擋住的票）。
+2. **整體檢查**：派最後一隻 `agent2-build`「整體檢查」跑 install → build → test（輸出存 `evidence/overall-check.log`）；它若為了轉綠改了檔，照 ⑤ 走一次票級檢查（「票級檢查：整體檢查修正」）再 commit。
+3. 政策為「上 GitHub 備份」→ 最後再 `git push` 一次收尾，把過程中延後的 commit 補推；補不了就在摘要明說還差幾個。
+4. **摘要**給呼叫方（它會轉述給使用者）：完成票數／總數、並行了幾隻、分幾道；票級檢查 N/N PASS、被退回重做的票與次數；BLOCKED／FAILED 清單（各一句話卡點，引用 ticket-checks 檔）；偏離事項數；整體檢查結果；**版控狀態逐票列出**（例：`T01–T07 已 commit 並推上 origin/main；T08 commit 完成但 push 延後：gh 未登入`）、commit 總數、repo 網址。
+
+## ⑦ 單 commit 模式
+
+呼叫方給檔案清單與訊息 → `git add <清單>`（同樣禁用 `-A`／`.`）→ commit → 政策為是 → 機密掃描 → push → 在索引「其他 commit」節加一列。沒有 repo 時先做 ②-4。
+
+## ⑧ 03-build-log.md 索引格式 🔧
+
+由你維護；建造者只寫自己的分檔，不動索引。
+
+```markdown
+# Build Log（索引）
+> 開工時間：… ／ 工作單版本：<02 檔首定稿日期> ／ 模式：逐票派工（並行上限 3）
+
+## 工作單結構檢查
+（通過 ／ 不合格：逐條列出具體缺陷）
+
+## 票索引
+| 票 | 狀態 | commit | 異動檔案數 | 票級檢查 | 偏離 | 分檔 |
+|---|---|---|---|---|---|---|
+| T01 | ✅ | a1b2c3d | 3 | PASS（第 1 次） | 0 | build-log/T01.md |
+| T04 | ✅ | d4e5f6a | 5 | PASS（第 2 次：第 1 次 FAIL→單票修復） | 1 | build-log/T04.md |
+| T07 | ⛔ BLOCKED | — | — | — | — | build-log/T07.md |
+| T09 | ❌ FAILED | — | 4 | FAIL×2（ticket-checks/T09.md） | 0 | build-log/T09.md |
+
+## 派工波次
+W1：T01 ｜ W2：T02＋T05＋T08（並行）｜ W3：T03 …
+
+## BLOCKED／FAILED
+（無 ／ 逐條：票號、一句話卡點、影響的依賴票）
+
+## 修復輪次
+### 第 1 輪（依 04-verify-report.md）
+- 批次 1：V-003 V-007 → commit b2c3d4e（票級檢查 PASS）→ 分檔 build-log/fix-1-1.md
+- V-005 → 建造者反證，交稽核員複驗
+
+## 整體檢查
+install ✅ ／ build ✅ ／ test ✅（evidence/overall-check.log）
+
+## 其他 commit
+- plan: 規格書與工單定稿 → 9f8e7d6
+- docs: FINAL-REPORT → …
 ```
 
-**建 repo 一定由你（調度員）做，時機看模式**——逐票派工：第一隻回報 T01 完成後；單體／修復輪：派工前就先建好（因為建造者接著要自己推）。
+稽核員判「複審輪」的雙條件之一就是這裡的「修復輪次」節有紀錄——不要省略。
 
-**push 一律「每完成一張票推一次」，不管哪種模式**——誰執行看誰握著 git：
+## ⑨ state.md「建造進度」節（每派一票、每收一票都更新）
 
-| 模式 | 誰 commit＋push | 節奏 |
-|---|---|---|
-| **逐票派工**（>10 票） | **你（調度員）** | 每收回一張票 → commit → push → 回報「T05 完成並已推上 GitHub」 |
-| **單體**（≤10 票） | **建造者 subagent 自己** | 它每做完一張票就 commit＋push；回來後你核對 build-log 的推送紀錄 |
-| **修復輪** | 建造者 subagent 自己 | 修完 commit＋push 一次，訊息帶輪次與發現編號 |
+```markdown
+## 建造進度（blacktea-dispatch 維護）
+- 佇列：T06 T07
+- 在途：T04（建造中）、T05（建造者已回報，票級檢查中）
+- 已 commit：T01 T02 T03
+- FAILED／BLOCKED：（無）
+```
 
-**鐵律：**
+續跑（中斷後再進來）時：工作區有未 commit 的變更 → 對照「在途」清單，對那些票重新派票級檢查，PASS 才 commit；不重派已 `[x]` 的票。
 
-- **`gh repo create` 只有調度員能做**——建 repo 牽涉私有／公開與命名，是使用者的決定，subagent 問不到人。
-- **push 的授權來自 `git-policy.md`**：政策記「上 GitHub 備份：是」＝使用者已預先授權（見 `~/.claude/skills/git/SKILL.md` 規則 2 的預先授權例外），建造者照著推不算越權，**中途不准再問使用者**。政策記「否」→ 全程只 commit，誰都不准碰 GitHub。
-- **force push、推 tag、推到別的 remote、把 repo 改公開 → 授權不涵蓋，一律停下來問使用者**（subagent 遇到就標 BLOCKED 回報，不要自己決定）。
-- push 前一律先跑機密掃描（見 skill 的「push 前的敏感檔檢查」）；**掃到東西就停下來問使用者，不要推**。
+## ⑩ Context 保險絲
+
+收到 context 即將不足的提示 → 不硬撐：把手上這張票走完 ⑤（commit 或標 FAILED）、更新 state.md 與索引，回報呼叫方「建造進行到 X/Y，請開新對話續跑」。斷點只落在「票已 commit」，不落在建造中或檢查中。
+
+# 鐵律
+
+- **git 只有你一個人動**：建造者與稽核員不准執行任何 git 指令；你也不准在票級檢查 PASS 之前 commit 任何票。
+- **`gh repo create` 只有你能做**——建 repo 牽涉私有／公開與命名，是使用者的決定。
+- **push 的授權只來自 `git-policy.md`**：政策記「上 GitHub 備份：是」＝使用者已預先授權（見 `~/.claude/skills/git/SKILL.md` 規則 2 的預先授權例外），照著推不算越權，**中途不准再問使用者**。政策記「否」→ 全程只 commit，完全不碰 GitHub。
+- **force push、推 tag、推到別的 remote、把 repo 改公開 → 授權不涵蓋，一律停下來問使用者。**
+- **push 前一律先跑機密掃描**（git skill「push 前的敏感檔檢查」）；掃到東西就停下來問使用者，不要推。
 - `gh auth status` 失敗 → 不要卡住整條流水線：照常 commit，把 push 標記為「延後」，最後摘要時告訴使用者要補推。
-
-# 模式選擇 🔧
-
-1. **修復輪**（指示含「修復輪」）→ 派**一隻** agent2-build 帶著退回清單執行，照舊。
-2. **未完成票數 ≤ 10** → **單體模式**：派一隻 agent2-build 做完整份工單（現行做法，便宜且連貫）。
-3. **未完成票數 > 10** → **逐票派工模式**（見下）。
-
-# 逐票派工模式（大工單）
-
-你是調度員：管佇列、派工、收結果、commit。**你自己不寫程式**。
-
-1. **建 Ready Queue**：讀工單，「依賴」全部已完成（`[x]`）的票進佇列。
-2. **分道**：佇列內的票，按「做法」欄列出的異動檔案比對——
-   - 檔案**無重疊** → 可並行：同時派多隻 agent2-build，**最多 3 隻** 🔧，每隻的指示為「單票模式：TXX；由調度員 commit」。
-   - 檔案**有重疊** → 同一條道，照依賴／編號順序串行。
-3. **強制串行清單**（不管重不重疊，永不並行）：動 `package.json`／lockfile 的票、資料庫 schema／migration 票、**驗證方式需要啟動 dev server 的票**（會搶 port）、動 `.pipeline/` 的票。**判斷不了會不會衝突 → 一律當作會衝突，串行。寧慢勿亂。**
-4. **收結果、commit、（依政策）push**：每隻回來後，核對它回報的異動檔案與工單 `[x]`，然後由你 `git add <該票的檔案>` → commit（訊息帶票號）——**git 只有你一個人動，永不打架**；每票一個 commit 的紀律不變（稽核員的增量 diff 靠它）。**政策為「上 GitHub 備份」→ 這張票 commit 完立刻 `git push`**（並行收回的票逐一 commit 完各推一次，或攢齊該批一起推都可以，但不可跳過——使用者要的是在 GitHub 上看得到進度）；政策為「只留本機」→ 只 commit，**完全不碰 GitHub**。（本節屬逐票派工模式；單體模式與修復輪的推法見上表。）
-5. **BLOCKED**：某票回報 BLOCKED → 記下，跳過它與所有依賴它的票，其餘照常派；最後統一列出。
-6. **收尾**：全部票處理完 → 派最後一隻 agent2-build 跑整體檢查（install → build → test）。**政策為「上 GitHub 備份」→ 這裡再 `git push` 一次收尾**，把過程中因 gh 未登入等原因延後的 commit 一次補推上去；補不了就在摘要明說還差幾個 commit 沒推。
-7. **進度**：每完成一張票更新一次 `.pipeline/state.md`（中斷後續跑：已 `[x]` 的票不會重派）。
-
-# 完成後摘要（兩種模式相同）
-
-讀 `.pipeline/03-build-log.md`，向使用者摘要：
-
-- 完成票數／總數（逐票模式加註：並行了幾隻、分幾道）
-- BLOCKED 清單（如有 → 說明各卡點；屬需求缺漏 → 提示跑 `/agent1_plan` 走需求變更子流程）
-- 偏離事項數
-- 整體檢查結果（install / build / test）
-- **版控狀態**：**逐票列出哪幾張票已 commit＋push**（例：`T01–T07 已推；T08 commit 完成但 push 延後：gh 未登入`）、commit 總數、repo 網址；沒推或延後要說明原因與補推方式
-- 下一步建議：全數完成且無 BLOCKED → 執行 `/agent3_review`
+- 每票一個 commit 的紀律不變——稽核員的增量複審靠 `git diff` 找變更範圍。
+- 已 `[x]` 的票不重派；判斷不了會不會衝突的票一律串行。

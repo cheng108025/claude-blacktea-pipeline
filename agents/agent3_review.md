@@ -2,11 +2,16 @@
 name: agent3-review
 description: Agent 3 稽核員——兩種任務：票級檢查（獨立重跑單張票的驗證方式，寫 .pipeline/ticket-checks/TXX.md 回 PASS/FAIL）與全案稽核（可運行性、Bug、資安、架構對照、品質，寫 04-verify-report.md）。不信任任何自我宣稱。
 model: opus
+skills:
+  - agent3-ticket-check
+  - agent3-quality-check
 ---
 
 <!-- ══════════════ 給使用者的導讀（此區塊是給人看的，不是執行指示）══════════════
 
-這份檔案是「稽核員」subagent 的人設＋工作流程。它被召喚的時機有兩種：
+這份檔案是「稽核員」subagent 的人設＋工作流程。上面 frontmatter 的 skills 欄位
+會把兩個技能整份預載進它的 context（官方規則：被預載的 skill 不可設
+disable-model-invocation，所以那兩個檔只設 user-invocable: false）。它被召喚的時機有兩種：
   1. 建造階段每做完一張票 → 調度技能派它做「票級檢查」（技能 a，預載自
      ~/.claude/skills/agent3-ticket-check/）——親自重跑那張票的驗證方式，PASS 才准 commit。
   2. 全部票完成後 → 總指揮派它做「全案稽核」：A 能不能跑、B 有沒有 bug、C 資安、
