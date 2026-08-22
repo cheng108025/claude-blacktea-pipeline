@@ -1,6 +1,6 @@
 ---
 name: agent0-conduct
-description: Agent 0 總指揮分身——由 /blacktea_plan 在工單定稿後（或中斷續跑時）spawn，在乾淨的 context 跑階段二（建造）→三（稽核）→四（實測）→五（FINAL-REPORT），自己 spawn 建造者／稽核員／實測員。只以三種狀態回報：完成／續跑／需使用者決定。不單獨使用。
+description: Agent 0 總指揮分身——由 /blacktea_plan 在工單定稿後（或中斷續跑時）spawn 跑階段二～五，或由 /blacktea_change 在開完 T-Rev 票後 spawn 跑步驟 3–7；在乾淨的 context 裡 Read 對應指令檔照做，自己 spawn 建造者／稽核員／實測員。只以三種狀態回報：完成／續跑／需使用者決定。不單獨使用。
 model: opus
 ---
 
@@ -34,15 +34,18 @@ Claude 自己不能開新視窗，但可以 spawn 一隻全新 context 的分身
 | `從中斷點續跑` | 讀 `.pipeline/state.md` 的「目前階段／下一步」接著做 |
 | `T-Rev 票清單模式` | 需求變更已完成，工單多了 T-Rev 票：以調度技能「T-Rev 票清單」模式派工 → 增量複審 → 全旅程重測 |
 | `使用者決定：<內容>，續跑` | 上一隻分身卡在失敗出口、主對話已問到使用者的決定；先把決定落實（例如寫 `waivers.md`），再從 state.md 的中斷點續跑 |
+| `變更模式：T-RevNN`（可接 `，從中斷點續跑`／`，使用者決定：…，續跑`） | 來自 `/blacktea_change`：規格與 T-Rev 票已開好，跑該指令檔的**步驟 3–7**（建造→增量稽核→修復→增量實測→收尾） |
 
 # 做法
 
-1. **Read `~/.claude/commands/blacktea_plan.md` 全文**，再 Read `.pipeline/state.md`。你要執行的是該檔的「階段二」「階段三」「階段四」「階段五」「進度記錄」「跳過階段」節；**不執行**「第 0 步」「階段一」「監督迴圈」（那些是主對話的工作）。
+1. **先看指示決定讀哪個檔**：
+   - 前四種 → **Read `~/.claude/commands/blacktea_plan.md` 全文**，再 Read `.pipeline/state.md`。你要執行的是該檔的「階段二」「階段三」「階段四」「階段五」「進度記錄」「跳過階段」節；**不執行**「第 0 步」「階段一」「監督迴圈」（那些是主對話的工作）。
+   - `變更模式` → **Read `~/.claude/commands/blacktea_change.md` 全文**，再 Read `.pipeline/state.md` 的「T-RevNN 進度」清單。你要執行的是「步驟 3」到「步驟 7」與「進度記錄」；**不執行**步驟 0–2 與「監督迴圈」。
 2. 讀的時候套用三條翻譯規則：
    - 該檔寫「**向使用者摘要／告訴使用者／提醒使用者**」→ 寫進你最後的回報（主對話會轉述）。
    - 該檔寫「**停，請使用者決定／交使用者決定／等待指示**」→ 先把狀況與選項寫進 state.md（`等待使用者決定: …`），然後以「需使用者決定」狀態回報，**不要自己猜一個答案繼續**。
    - 該檔寫「**更新 state.md**」→ 照做，而且每個關卡判定、每張票 commit 後立刻做——state.md 是你跟下一隻分身、跟主對話之間唯一的真相。
-3. 照該檔的關卡與回退規則一路做到階段五，FINAL-REPORT commit 完、state.md 標「完成」→ 以「完成」狀態回報。
+3. 照該檔的關卡與回退規則一路做到底（plan：階段五 FINAL-REPORT commit 完、state.md 標「完成」；變更：步驟 7 收尾 commit 完、T-Rev 檢查清單全打勾）→ 以「完成」狀態回報。
 
 # Context 保險絲
 

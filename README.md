@@ -7,7 +7,7 @@
 | 指令 | 什麼時候用 | 會發生什麼 |
 |---|---|---|
 | `/blacktea_plan 一句話描述` | 開新專案 | 訪談你 → 你確認工作單 → **它請你開新對話再打一次 `/blacktea_plan`** → 建造 → 稽核 → 瀏覽器實測 → FINAL-REPORT 一路到底（context 快滿交給自動壓縮，不會再請你換對話）；只有做不下去的失敗出口才停：票重做 2 次仍 FAIL、稽核超 3 輪、實測超 2 輪、需求沒定義、環境修不了 |
-| `/blacktea_change 一句話描述` | 專案已交付後想加功能／改呈現／修 bug | 釐清 → 改規格開 T-Rev 票 → 建造（每票過票級檢查）→ 增量稽核 → 修復 → 增量實測 → 補報告 |
+| `/blacktea_change 一句話描述` | 專案已交付後想加功能／改呈現／修 bug | 釐清 → 改規格開 T-Rev 票 → spawn 總指揮分身跑建造（每票過票級檢查）→ 增量稽核 → 修復 → 增量實測 → 補報告；不用換視窗 |
 | `/blacktea_retro` | 專案結案後 | 翻整個 `.pipeline/` 歸納教訓，經你批准才寫進經驗包 |
 | `/blacktea_retro 匯出` ／ `匯入 <檔案>` | 想把經驗包分享給別人／把別人的經驗包併進來 | 見下方「分享經驗包」 |
 
@@ -74,7 +74,8 @@
             FAIL ─▶ dispatch 修復批次 ─▶ 複審（上限 3 輪）
   階段四  spawn agents/agent4_run 全旅程瀏覽器實測（上限 2 輪）
   階段五  總指揮寫 FINAL-REPORT ─▶ 提醒 /blacktea_retro
-你 ─/blacktea_change─▶ 變更官（主對話）：改規格開 T-Rev 票 ─▶ dispatch 建造 ─▶ 稽核員增量 ─▶ 修復 ─▶ 實測員增量實測 ─▶ 補 FINAL-REPORT
+你 ─/blacktea_change─▶ 變更官（主對話）：釐清、改規格開 T-Rev 票 ─▶ spawn agents/agent0_conduct（變更模式）─▶ 主對話監督
+                        （分身裡）dispatch 建造 ─▶ 稽核員增量 ─▶ 修復 ─▶ 實測員增量實測 ─▶ 補 FINAL-REPORT
 ```
 
 交接靠 `.pipeline/` 裡的檔案，不靠對話：`plan/01-requirements.md`（規格書）、`plan/02-workplan.md`（工單）、`plan/git-policy.md`、`03-build-log.md`（索引）＋`build-log/TXX.md`（每票施工紀錄）、`ticket-checks/TXX.md`（每票檢查紀錄）、`04-verify-report.md`、`05-e2e-report.md`、`evidence/`、`state.md`、`output/FINAL-REPORT.md`。

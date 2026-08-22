@@ -4,7 +4,7 @@
 
 | 檔案 | 角色 | 是不是 subagent | 模型 | 誰召喚它 |
 |---|---|---|---|---|
-| `agent0_conduct.md` | 總指揮分身：在乾淨 context 裡跑階段二～五（建造→稽核→實測→FINAL-REPORT），自己再 spawn 建造者／稽核員／實測員；只回報完成／續跑／需使用者決定 | 是（`name: agent0-conduct`） | opus | `/blacktea_plan` 第 0 步（工單定稿、你開新對話之後）與「監督迴圈」 |
+| `agent0_conduct.md` | 總指揮分身：在乾淨 context 裡跑階段二～五（建造→稽核→實測→FINAL-REPORT），自己再 spawn 建造者／稽核員／實測員；只回報完成／續跑／需使用者決定 | 是（`name: agent0-conduct`） | opus | `/blacktea_plan` 第 0 步（工單定稿、你開新對話之後）與「監督迴圈」；`/blacktea_change` 步驟 2 之後（變更模式，跑步驟 3–7） |
 | `agent1_plan.md` | 訪談官：把你的一句話問到零模糊，寫規格書、拆工單 | **不是**（刻意沒有 `name`） | 跟主對話（由你 `/model` 選的 session 模型決定） | `/blacktea_plan` 階段一用 Read 照做 |
 | `agent2_build.md` | 建造者：一次做一張票，跑驗證方式，回報 | 是（`name: agent2-build`） | sonnet | `skills/blacktea-dispatch` |
 | `agent3_review.md` | 稽核員：票級檢查＋全案稽核（能不能跑、bug、資安、架構對照、品質） | 是（`name: agent3-review`） | opus | dispatch（票級）、`/blacktea_plan` 階段三、`/blacktea_change` 步驟 4 |
