@@ -40,7 +40,9 @@
 ```
 ~/.claude/
 ├── commands/   你打的指令（只有上面三個）。全部 disable-model-invocation：只有人按才跑。
-├── agents/     四個角色，一人一檔：他是誰、鐵律、作業步驟。
+├── agents/     五個角色，一人一檔：他是誰、鐵律、作業步驟。
+│   ├── agent0_conduct.md 總指揮分身（subagent，name: agent0-conduct，opus）——工單定稿、你開新對話後，
+│   │                     主對話 spawn 它在乾淨 context 跑階段二～五；它 Read commands/blacktea_plan.md 照做。
 │   ├── agent1_plan.md    訪談官——刻意沒有 name，所以不是 subagent（訪談要問你，subagent 不能問人）；
 │   │                     由 /blacktea_plan 在主對話 Read 照做。它的三個技能在 skills/agent1-*。
 │   ├── agent2_build.md   建造者（subagent，name: agent2-build，sonnet）——一次做一張票，永不碰 git。
@@ -62,7 +64,9 @@
 ```
 你 ─/blacktea_plan─▶ 總指揮（主對話，commands/blacktea_plan.md）
   階段一  Read agents/agent1_plan.md ─▶ Read skills/agent1-interview ─▶ agent1-spec ─▶ agent1-tickets ─▶ 你看 HTML 點頭 ─▶ 定稿 ─▶ 停：請你開新對話
-你 ─/blacktea_plan（新對話，不帶參數）─▶ 總指揮讀 state.md，直接進階段二
+你 ─/blacktea_plan（新對話，不帶參數）─▶ 總指揮讀 state.md ─▶ spawn agents/agent0_conduct（總指揮分身，乾淨 context）
+                                          主對話只監督：分身回「續跑」就再 spawn 一隻接手；回「需使用者決定」才問你；回「完成」就轉述
+  （以下都在分身裡跑）
   階段二  Read skills/blacktea-dispatch ─▶ spawn agents/agent2_build（最多 3 隻並行，一票一隻）
             每收一票 ─▶ spawn agents/agent3_review「票級檢查 TXX」（用 skills/agent3-ticket-check）─▶ PASS 才 commit／push
             FAIL ─▶ 建造者單票修復（最多 2 次）
@@ -94,6 +98,7 @@
 | 品質檢查查什麼、各算什麼嚴重度 | `skills/agent3-quality-check/references/quality-checklist.md` | 全檔 |
 | 稽核多嚴、嚴重度基準、資安 8 條 | `agents/agent3_review.md` | 關卡判定、嚴重度基準、C 段 |
 | 稽核退回上限（3）、實測退回上限（2） | `commands/blacktea_plan.md` | 階段三、階段四 |
+| 總指揮分身續跑上限（10）、分身用哪顆模型 | `commands/blacktea_plan.md` 監督迴圈、`agents/agent0_conduct.md` frontmatter | — |
 | 實測旅程三層、降級方式、證據命名 | `agents/agent4_run.md` | 設計旅程、一條一條執行 |
 | 變更的修復輪上限、多少輪後改全旅程實測 | `commands/blacktea_change.md` | 步驟 5、步驟 6 |
 | 經驗包每段幾條 | `commands/blacktea_retro.md` | 寫入規則 |
@@ -134,5 +139,5 @@
 ## 改完引擎之後
 
 - `agents/` 與 `skills/` 的檔案改完幾秒內會自動重載，不用重啟；`commands/` 官方沒保證熱載入，改完保守起見重啟 Claude Code。
-- 重啟後可用 `/agents` 確認只有 agent2-build、agent3-review、agent4-run 三個分身；`/` 選單應有三個 blacktea 指令加 `/git`、`/vscode`、`/clawd`（六個流水線技能不該出現）。
+- 重啟後可用 `/agents` 確認只有 agent0-conduct、agent2-build、agent3-review、agent4-run 四個分身；`/` 選單應有三個 blacktea 指令加 `/git`、`/vscode`、`/clawd`（六個流水線技能不該出現）。
 - 三個指令檔首的 `model: opus` **只管你打指令的那一回合**；訪談要來回多回合，之後整條流水線用的是 session 模型。想讓整條線都跑 opus，開工前先打 `/model opus` 把 session 模型切過去（分身的模型由各自 agents 檔決定，不受影響）。
