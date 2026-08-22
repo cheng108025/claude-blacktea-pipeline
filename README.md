@@ -6,12 +6,12 @@
 
 | 指令 | 什麼時候用 | 會發生什麼 |
 |---|---|---|
-| `/blacktea_plan 一句話描述` | 開新專案 | 訪談你 → 你確認工作單 → 建造 → 稽核 → 瀏覽器實測 → FINAL-REPORT，中途只有卡關才找你 |
+| `/blacktea_plan 一句話描述` | 開新專案 | 訪談你 → 你確認工作單 → **它請你開新對話再打一次 `/blacktea_plan`** → 建造 → 稽核 → 瀏覽器實測 → FINAL-REPORT，之後只有卡關才找你 |
 | `/blacktea_change 一句話描述` | 專案已交付後想加功能／改呈現／修 bug | 釐清 → 改規格開 T-Rev 票 → 建造（每票過票級檢查）→ 增量稽核 → 修復 → 增量實測 → 補報告 |
 | `/blacktea_retro` | 專案結案後 | 翻整個 `.pipeline/` 歸納教訓，經你批准才寫進經驗包 |
 | `/blacktea_retro 匯出` ／ `匯入 <檔案>` | 想把經驗包分享給別人／把別人的經驗包併進來 | 見下方「分享經驗包」 |
 
-中斷（用量上限、關機、重啟）後再打一次同一個指令（不帶參數）就會從 `.pipeline/state.md` 的中斷點續跑。`/blacktea_plan 從階段 3 開始` 可以跳階段（門禁照查）。另外三個一般技能 `/git`、`/vscode`、`/clawd` 與流水線無關。
+工單定稿後是**固定換手點**：總指揮會停下來請你開新對話、打 `/blacktea_plan`（不帶參數）再開工——訪談把 context 堆得很厚，建造階段換乾淨的對話跑。中斷（用量上限、關機、重啟）後也是同一招：再打一次同一個指令（不帶參數）就會從 `.pipeline/state.md` 的中斷點續跑。`/blacktea_plan 從階段 3 開始` 可以跳階段（門禁照查）。另外三個一般技能 `/git`、`/vscode`、`/clawd` 與流水線無關。
 
 ## 大概要花多少錢（2026-08 查價，之後請以官方定價頁為準）
 
@@ -61,7 +61,8 @@
 
 ```
 你 ─/blacktea_plan─▶ 總指揮（主對話，commands/blacktea_plan.md）
-  階段一  Read agents/agent1_plan.md ─▶ Read skills/agent1-interview ─▶ agent1-spec ─▶ agent1-tickets ─▶ 你看 HTML 點頭 ─▶ 定稿
+  階段一  Read agents/agent1_plan.md ─▶ Read skills/agent1-interview ─▶ agent1-spec ─▶ agent1-tickets ─▶ 你看 HTML 點頭 ─▶ 定稿 ─▶ 停：請你開新對話
+你 ─/blacktea_plan（新對話，不帶參數）─▶ 總指揮讀 state.md，直接進階段二
   階段二  Read skills/blacktea-dispatch ─▶ spawn agents/agent2_build（最多 3 隻並行，一票一隻）
             每收一票 ─▶ spawn agents/agent3_review「票級檢查 TXX」（用 skills/agent3-ticket-check）─▶ PASS 才 commit／push
             FAIL ─▶ 建造者單票修復（最多 2 次）
