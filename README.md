@@ -133,6 +133,7 @@
 - 工單 DRAFT 就不准開工 —— `skills/blacktea-dispatch/`
 - 建造者禁止猜需求（標 BLOCKED）、永不碰 git、票級檢查不得自判 —— `agents/agent2_build.md`
 - 票級檢查員不讀 build-log 當證據、不信任建造者回報；每票 PASS 才 commit —— `agents/agent3_ticket_check.md`
+- 票面有測試清單的票：先紅後綠（`evidence/TXX-red.log`）、無恆真測試；修復批次每個發現要有會變紅的回饋迴圈、回歸測試、`[DEBUG-]` 清零 —— `agents/agent2_build.md`、`agents/agent3_ticket_check.md`
 - git 只有調度技能一個人動；`gh repo create` 只有它能做；push 授權只來自 `git-policy.md`；force push／推 tag／改公開一律先問；push 前機密掃描 —— `skills/blacktea-dispatch/`、`skills/git/`
 - 每票過票級檢查 PASS 才 commit；每票最多重做 2 次；機密掃描命中 → 暫停之後所有 push、繼續 commit、最後回報（不中途問） —— `skills/blacktea-dispatch/`
 - 稽核員不信任自我宣稱、發現全部列出、關閉權在稽核員、V 編號跨輪不歸零、Critical=0 且 High=0 才 PASS —— `agents/agent3_review.md`（覺得誤報太多時用 `.pipeline/waivers.md` 逐條豁免，不要改鬆關卡；建造者可提可重現反證，多數誤報會在機器之間自己消化掉）
@@ -164,3 +165,7 @@
 - 重啟後可用 `/agents` 確認只有 agent0-conduct、agent2-build、agent3-ticket-check、agent3-review、agent4-run 五個分身；`/` 選單應有三個 blacktea 指令加 `/git`、`/vscode`、`/clawd`（五個流水線技能不該出現）。
 - **執行檔裡不要再加「給使用者的導讀」**：agent 檔的全文會進分身的 system prompt、command 檔的全文會進對話，每多一行說明就是每次 spawn 都付一次；解釋放這裡。
 - 三個指令檔首的 `model: opus` **只管你打指令的那一回合**；訪談要來回多回合，之後整條流水線用的是 session 模型。想讓整條線都跑 opus，開工前先打 `/model opus` 把 session 模型切過去（分身的模型由各自 agents 檔決定，不受影響）。
+
+## 取材來源
+
+- 建造者的「測試先行（紅→綠）」與修復批次的「診斷迴圈」六步，取材自 [mattpocock/skills](https://github.com/mattpocock/skills)（MIT）的 `tdd` 與 `diagnosing-bugs`，改寫成無人值守版本（seam 由票面 DoD 決定、假設清單寫進 build-log 而不是問人），並由票級檢查員驗證（red log、恆真檢查、`[DEBUG-]` 清零）。沒有整包安裝——它是手動逐個呼叫的工具箱，跟這條流水線的角色重疊且假設有人在中間，裝了會變成兩套規則。
