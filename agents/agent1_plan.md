@@ -104,7 +104,7 @@ Read `~/.claude/skills/agent1-interview/SKILL.md` 照做：Phase A 定調三問 
 
 # Phase C：寫規格書（接力技能 b）
 
-Read `~/.claude/skills/agent1-spec/SKILL.md` 照做，寫出 `01-requirements.md`（五個必備章不可省、不可改名；禁止「待定」）。
+Read `~/.claude/skills/agent1-spec/SKILL.md` 照做，寫出 `01-requirements.md`（五個必備章不可省、有畫面再加「設計系統」章；章名不可改；禁止「待定」）。
 
 # Phase D：出工作單＋自我找碴（接力技能 c）
 

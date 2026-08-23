@@ -66,7 +66,7 @@ disable-model-invocation: true
    - 修復批次：「票級檢查：修復批次 第 <輪次> 輪 批次 <n>；發現 V-xxx、V-yyy（報告 `<04/05 路徑>`）；受影響票：TXX、TYY（你依異動檔案對照各票「做法」欄找出）；異動檔案：<清單>；紀錄寫 `.pipeline/ticket-checks/fix-<輪次>-<n>.md`」
    - 整體檢查修正：「票級檢查：整體檢查修正；異動檔案：<清單>；紀錄寫 `.pipeline/ticket-checks/overall-check.md`」
 
-   票級檢查員會親自重跑該票的驗證方式、逐條驗 DoD、跑測試，寫紀錄。票級檢查**一次只跑一隻** 🔧（它可能會起 dev server）。
+   要順帶品質檢查就在指示末尾加「順帶品質檢查」🔧（預設不加，全案稽核再做）。票級檢查員會親自重跑該票的驗證方式、逐條驗 DoD、跑測試，寫紀錄。票級檢查**一次只跑一隻** 🔧（它可能會起 dev server）。
 3. 讀 `.pipeline/ticket-checks/TXX.md`（修復批次：`fix-<輪次>-<n>.md`；整體檢查修正：`overall-check.md`）的結論：
    - **PASS** → 先在 `02-workplan.md` 該票那一行打 `[x]`（只改那一行；勾只有你會打）→ 從異動清單剔除被 `.gitignore` 擋住的路徑（`.pipeline/build-log/`、`ticket-checks/`、`evidence/`，留著會讓 `git add` 回 exit 1）→ `git add <該票的異動檔案清單> .pipeline/plan/02-workplan.md`（**禁用 `git add -A`／`git add .`**——並行時工作區有別票的半成品）→ commit，訊息帶票號（例：`T03: 使用者登入 API`；修復批次：`fix round 2: V-003 V-007`）→ 政策為「上 GitHub 備份」且 push 未暫停 → 先跑機密掃描（git skill 的三條指令）→ `git push`；**掃到東西 → 不推、不問、不卡**：本機 commit 保留，state.md 記「push 暫停：機密掃描命中 <檔案／樣式>（TXX 起）」，**之後所有票也一律不推**（推了等於把那個 commit 一起推上去），流水線照常繼續；最後摘要與 FINAL-REPORT 列出命中內容，由使用者事後處理（移除機密、改寫歷史或決定照推）。索引表更新該列；修復批次另在索引「修復輪次」節記一列（第 N 輪＝觸發報告檔首的輪次）。
    - **FAIL** → 確認 `02-workplan.md` 該票仍是 `[ ]`（建造者若誤打勾就改回）→ spawn `agent2-build`「單票修復：TXX，依 `.pipeline/ticket-checks/TXX.md` 的 FAIL 項」→ 回來再派一次票級檢查。修復批次的票級檢查 FAIL → 再派一次「修復批次」，指示加「依 `.pipeline/ticket-checks/fix-<輪次>-<n>.md` 的 FAIL 項只修這些」。**每票（每批）最多重做 2 次** 🔧；第 2 次仍 FAIL → 索引標 **FAILED**（不 commit、保持 `[ ]`），跳過所有依賴它的票，最後統一回報。建造者提出可重現反證 → 轉給票級檢查員複驗，檢查員判定為準。

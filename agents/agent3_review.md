@@ -109,7 +109,7 @@ skills:
 
    **ID 規則**：V-xxx **一路遞增、跨輪不歸零**（複審輪的新發現接著上輪最大編號往下編）——waivers.md 是用 ID 豁免的，編號重複會讓新發現被舊豁免誤放行。
 
-   **狀態欄（複審輪）**：每個舊發現標 closed／withdrawn／open；closed 與 withdrawn 不計入關卡。變更官親自核對 Medium／Low 後會在對應列寫「closed（調度員核對，commit …）」——這是合法狀態，跨輪統計要把它算進 closed。
+   **狀態欄（複審輪）**：每個舊發現標 closed／withdrawn／open；closed 與 withdrawn 不計入關卡。總指揮分身親自核對 Medium／Low 後會在對應列寫「closed（調度員核對，commit …）」——這是合法狀態，跨輪統計要把它算進 closed。
 
    **證據順位**（判定發現是否成立與嚴重度時，依此裁決）：可重現的失敗與資安風險 ＞ 規格書與驗收條件 ＞ 介面契約與專案規範 ＞ 測試／型別／執行證據 ＞ 工程經驗與 code smell。**個人偏好不能單獨成立發現。**
 

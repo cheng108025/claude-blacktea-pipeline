@@ -16,7 +16,7 @@ disable-model-invocation: true
 
 ## 待裁決批次（無人值守期間跳過的問題，使用者回來一次決定）
 
-1. 讀 state.md「待使用者裁決」表所有「未決」列，先用一段話讓使用者看到全貌：幾件、各來自哪張票／哪個發現、影響什麼。
+1. 先跑步驟 0 的門禁與健檢（git status 乾淨、票號／決策編號算好），再讀 state.md「待使用者裁決」表所有「未決」列，先用一段話讓使用者看到全貌：幾件、各來自哪張票／哪個發現、影響什麼。
 2. 用 AskUserQuestion **一次問完**（每輪最多 4 題，超過就分輪，題目照 Q 編號順序；每題的選項直接用表裡的 A／B／C 並標「（建議）」）。使用者選「其他」就記他的原話。
 3. 把每個答案寫回該列（狀態改「已決：<選項>」），然後歸類：
    - 要改實作 → 全部併成**一次** T-RevNN（多件就拆 a／b／c 串行子票），進步驟 2 改規格＋開票 → 監督迴圈。決策紀錄每件一列 Dnn。
@@ -29,7 +29,7 @@ disable-model-invocation: true
 - `.pipeline/state.md` 階段為「完成」**且** `.pipeline/output/FINAL-REPORT.md` 存在 → 繼續。
 - 不符合（專案還在建造中、或根本沒有 `.pipeline/`）→ 停，告訴使用者：「這個專案還沒交付／不是流水線專案，請用 `/blacktea_plan`」。
 - `git status` 必須乾淨；讀 `.pipeline/plan/git-policy.md`，政策為「上 GitHub 備份：是」才檢查 `origin` 可達。工作區有殘留改動 → 先問使用者那是什麼，不要蓋掉。
-- 讀 `~/.claude/blacktea/lessons.md`（全域經驗包）與 state.md 的「交付後迭代進度」節，知道前幾輪改了什麼、還有哪些 V-xxx open。
+- 讀 `~/.claude/blacktea/lessons.md`（全域經驗包）與 state.md 的各「T-RevNN 進度」清單，知道前幾輪改了什麼、還有哪些 V-xxx open。
 - 舊專案若沒有 `.pipeline/build-log/`、`.pipeline/ticket-checks/` 或 `03-build-log.md` 不是索引格式 → 先告知使用者，把舊的 `03-build-log.md` 改名為 `03-build-log-legacy.md` 保留，由調度技能建立新目錄與索引；稽核員核對票級檢查時只看索引表列出的票。
 
 票號：看 `02-workplan.md` 檔尾最後一張 `T-RevNN`，本次＝NN+1（沒有就從 T-Rev01 起）。決策編號：看 `01-requirements.md` 決策紀錄最後一個 `Dnn`，本次＝nn+1。

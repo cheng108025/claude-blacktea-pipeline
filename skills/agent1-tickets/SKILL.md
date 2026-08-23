@@ -54,7 +54,7 @@ disable-model-invocation: true
 2. **T01 環境檢查**（固定第一張，「基礎建設」）：
    - **專案路徑在 Linux 原生檔案系統**（例：`~/dev/專案名`），**不在 `/mnt/c` 底下**（那是 Windows 磁碟掛載，IO 慢且檔案監看不可靠）；路徑不含空白。
    - node／python 版本符合規格書。
-   - web 專案：Playwright MCP 可用（專案根目錄的 `.mcp.json` 含 playwright（腳印已內建），或 `claude mcp list` 看得到；都沒有就標 BLOCKED，附解法：從 `~/.claude/blacktea/templates/mcp.json` 複製，或跑 `claude mcp add playwright -- npx -y @playwright/mcp@latest --output-dir .pipeline/evidence`）。
+   - web 專案：Playwright MCP 可用（專案根目錄的 `.mcp.json` 含 playwright（腳印已內建），或 `claude mcp list` 看得到；都沒有就標 BLOCKED，附解法：從 `~/.claude/blacktea/templates/mcp.json` 複製，或跑 `claude mcp add playwright -- npx -y @playwright/mcp@latest --output-dir .pipeline/evidence`）。另確認 Playwright **CLI** 截圖能跑：`~/.cache/ms-playwright/` 底下有 chromium，沒有就 `npx -y playwright install chromium`（基座票與 UI 票的驗證方式靠它截圖）。
    - **核對 `.gitignore`** 🔧：`git init` 與首 commit 由調度技能在派 T01 之前完成，`.gitignore` 也由它依本清單先建好；T01 負責核對內容至少含 `.env`、`node_modules/`、`.pipeline/evidence/`、`.pipeline/state.md`、`.pipeline/server.pid`、`.pipeline/03-build-log.md`、`.pipeline/build-log/`、`.pipeline/ticket-checks/`、`.pipeline/04-verify-report.md`、`.pipeline/05-e2e-report.md`，缺的補上。
    - T01 本身不執行任何 git 指令（建造者一律不碰 git）。
 2b. **設計系統基座票**（有畫面的專案固定一張，「基礎建設」，排在第一張 UI 票之前、所有 UI 票都依賴它）：

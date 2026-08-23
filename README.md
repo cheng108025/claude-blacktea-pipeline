@@ -23,7 +23,7 @@
 |---|---|---|
 | 訪談官／總指揮（主對話） | session 模型（建議 opus） | 訪談來回多回合、讀整份規格與工單 |
 | 建造者 agent2 | sonnet | 一票一隻、最多 3 隻並行，每隻都讀工單＋規格＋程式碼 |
-| 票級檢查員 agent3-ticket-check | sonnet | 每票至少一次（FAIL 重做再加）；只載 6 KB 人設，照票面重跑驗證 |
+| 票級檢查員 agent3-ticket-check | sonnet | 每票至少一次（FAIL 重做再加）；只載約 7 KB 人設，照票面重跑驗證 |
 | 稽核員 agent3 | opus | **主要消耗**：全案稽核首輪逐檔全量＋複審最多 3 輪 |
 | 實測員 agent4 | sonnet | 真瀏覽器操作、截圖留證 |
 
@@ -98,7 +98,7 @@
 | 技術棧攤牌那一輪表格有哪幾列、什麼時候問 | `skills/agent1-interview/SKILL.md` | 「訪談規則」→ 必問題——技術棧攤牌 |
 | 視覺定調問哪四題、三種風格原型、預設 | `skills/agent1-interview/SKILL.md` | 「訪談規則」→ 必問題——視覺定調 |
 | 設計系統章要有哪幾段（token、狀態矩陣、元件清單） | `skills/agent1-spec/SKILL.md` | 「章節菜單」7b |
-| 設計系統基座票做什麼、UI 票三條硬規定 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」2b、「品質要求」 |
+| 設計系統基座票做什麼、UI 票三條硬規定 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」2b、「每張 ticket 的品質要求」 |
 | UI 原型怎麼做、放哪 | `agents/agent1_plan.md` | Phase E「產出 HTML 檢視版」 |
 | 規格書要有哪些章、技術棧表；哪些章不可省 | `skills/agent1-spec/SKILL.md` | 「章節菜單」、「五個必備章」 |
 | ticket 要拆多小、六欄長怎樣 | `skills/agent1-tickets/SKILL.md` | 「每張 ticket 的品質要求」、「Ticket 格式」 |
@@ -112,7 +112,8 @@
 | 建造者用哪顆模型 | `agents/agent2_build.md` | frontmatter `model` |
 | 建造者的編碼守則（資安／可維護／前端／測試先行）、健康檢查等多久、server 配方 | `agents/agent2_build.md` | 「編碼守則」、「Linux 指令慣例」 |
 | build-log 分檔要記什麼 | `agents/agent2_build.md` | 「附錄」 |
-| 票級檢查用哪顆模型、紀錄每段字數、要不要順帶品質檢查 | `agents/agent3_ticket_check.md` | frontmatter、「寫紀錄」、「判定」最後一條 |
+| 票級檢查用哪顆模型、紀錄每段字數 | `agents/agent3_ticket_check.md` | frontmatter、「寫紀錄」 |
+| 票級檢查要不要順帶品質檢查 | `skills/blacktea-dispatch/SKILL.md` | ⑤-2（在指示末尾加「順帶品質檢查」） |
 | **稽核** | | |
 | 稽核員用哪顆模型 | `agents/agent3_review.md` | frontmatter `model` |
 | 稽核多嚴、嚴重度基準、資安 8 條 | `agents/agent3_review.md` | 「關卡判定」、「嚴重度基準」、Step 5 |

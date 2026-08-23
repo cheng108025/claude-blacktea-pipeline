@@ -17,7 +17,7 @@ description: 任何牽涉 git／GitHub 的動作都要先讀本檔。三種時�
 
 - 執行 `git init`
 - 建立新專案骨架／腳手架（`npm create`、`cargo new`、`django-admin startproject` 等）
-- 紅茶流水線 T01 建立專案目錄時
+- 紅茶流水線：調度技能做首 commit 前（正常由訪談官 Phase 0 先問好寫成 `git-policy.md`；跑在分身裡問不到人時，照調度技能 ②-3 預設「只留本機」，不建 repo、不 push）
 - 使用者說「開一個新專案」「幫我做一個 XXX」而該專案還沒有 repo
 
 **要問清楚三件事，一次問完，不要分三輪：**
@@ -47,7 +47,7 @@ description: 任何牽涉 git／GitHub 的動作都要先讀本檔。三種時�
 - `git push --force` / `--force-with-lease`——會覆蓋遠端歷史，**每一次都要問**，並講清楚會蓋掉什麼。
 - 推到授權當時談的以外的地方：非 origin 的 remote、非當前工作分支、`git push --tags`。
 - 把 repo 從私有改公開，或推到公開 repo 而授權時談的是私有。
-- 敏感檔檢查有命中（見下）——**有授權也要停下來先講給使用者聽**。
+- 敏感檔檢查有命中（見下）——**有授權也要停下來先講給使用者聽**。**例外：紅茶流水線內**（專案有 `git-policy.md`、執行者是調度技能）命中＝不推、不問、本機照常 commit、流水線繼續、結案一次回報（規則在 `~/.claude/skills/blacktea-dispatch/SKILL.md`，以它為準）。
 - 專案沒有 `git-policy.md`、也從沒問過→ 先照規則 1 問，不准先斬後奏。
 
 **每一次 push（含已授權的）都要做的兩件事：**
@@ -89,7 +89,7 @@ git ls-files | grep -iE 'credential|token|secret|\.env|\.pem|id_rsa|hosts\.yml|\
 git diff origin/<branch>..HEAD | grep -iE 'api[_-]?key|secret|password|ghp_|sk-[a-zA-Z0-9]{20}'
 ```
 
-**任何一項有命中 → 停下來，先講給使用者聽，不要推。**
+**任何一項有命中 → 停下來，先講給使用者聽，不要推。**（流水線內：不推、不問、繼續、結案回報——見上。）
 
 `.gitignore` 建議用白名單寫法（先 `*` 全忽略，再逐一放行），比黑名單安全——漏寫黑名單會外洩，漏寫白名單只是少備份一個檔案。`~/.claude` 的 .gitignore 就是這種寫法，可參考。
 
