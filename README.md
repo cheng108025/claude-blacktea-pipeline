@@ -57,7 +57,7 @@
 │   ├── agent1-interview/     訪談官技能 a：問到整個架構清楚（評分表 ≥9 才停；評分表與出題格式在檔內）
 │   ├── agent1-spec/          訪談官技能 b：把需求寫成規格書（章節菜單在檔內）
 │   ├── agent1-tickets/       訪談官技能 c：拆工單＋自我稽核 7 項（格式、T01、清單在檔內）＋可選 Codex 覆核（references/）
-│   ├── agent3-quality-check/ 稽核員技能 b：可讀、可維護、沒有多餘程式碼（13 條清單在檔內；不擋關）
+│   ├── agent3-quality-check/ 稽核員技能 b：可讀、可維護、沒有多餘程式碼（15 條清單在檔內，含 UI 一致性；不擋關）
 │   ├── git/  vscode/  clawd/  一般技能（git 規範、VS Code 右鍵／連 WSL、桌面寵物）
 └── blacktea/   共用資料：lessons.md（經驗包，復盤官經你批准才寫）、templates/（專案腳印：settings.json、mcp.json）
 ```
@@ -81,7 +81,7 @@
                         （分身裡）dispatch 建造 ─▶ 稽核員增量 ─▶ 修復 ─▶ 實測員增量實測 ─▶ 補 FINAL-REPORT
 ```
 
-交接靠 `.pipeline/` 裡的檔案，不靠對話：`plan/01-requirements.md`（規格書）、`plan/02-workplan.md`（工單）、`plan/git-policy.md`、`03-build-log.md`（索引）＋`build-log/TXX.md`（每票施工紀錄）、`ticket-checks/TXX.md`（每票檢查紀錄）、`04-verify-report.md`、`05-e2e-report.md`、`evidence/`、`state.md`、`output/FINAL-REPORT.md`。
+交接靠 `.pipeline/` 裡的檔案，不靠對話：`plan/01-requirements.md`（規格書）、`plan/02-workplan.md`（工單）、`plan/ui-prototype.html`（外觀契約，有畫面才有）、`plan/git-policy.md`、`plan/run-policy.md`（無人值守政策）、`03-build-log.md`（索引）＋`build-log/TXX.md`（每票施工紀錄）、`ticket-checks/TXX.md`（每票檢查紀錄）、`04-verify-report.md`、`05-e2e-report.md`、`evidence/`、`state.md`、`output/FINAL-REPORT.md`。
 
 ## 想調整什麼 → 去哪個檔
 
@@ -96,6 +96,10 @@
 | 門檻分數、評分表面向、哪些必滿分 ★ | `skills/agent1-interview/SKILL.md` | 「門檻」、「評分表」 |
 | 問題要問得多詳細 | `skills/agent1-interview/SKILL.md` | 「每一題的標準構成」 |
 | 技術棧攤牌那一輪表格有哪幾列、什麼時候問 | `skills/agent1-interview/SKILL.md` | 「訪談規則」→ 必問題——技術棧攤牌 |
+| 視覺定調問哪四題、三種風格原型、預設 | `skills/agent1-interview/SKILL.md` | 「訪談規則」→ 必問題——視覺定調 |
+| 設計系統章要有哪幾段（token、狀態矩陣、元件清單） | `skills/agent1-spec/SKILL.md` | 「章節菜單」7b |
+| 設計系統基座票做什麼、UI 票三條硬規定 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」2b、「品質要求」 |
+| UI 原型怎麼做、放哪 | `agents/agent1_plan.md` | Phase E「產出 HTML 檢視版」 |
 | 規格書要有哪些章、技術棧表；哪些章不可省 | `skills/agent1-spec/SKILL.md` | 「章節菜單」、「五個必備章」 |
 | ticket 要拆多小、六欄長怎樣 | `skills/agent1-tickets/SKILL.md` | 「每張 ticket 的品質要求」、「Ticket 格式」 |
 | T01 做什麼、.gitignore 擋什麼 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」第 2 條 |
@@ -106,7 +110,7 @@
 | 票級檢查一次跑幾隻、每票重做幾次 | `skills/blacktea-dispatch/SKILL.md` | ⑤ |
 | build-log 索引長什麼樣 | `skills/blacktea-dispatch/SKILL.md` | ⑧ |
 | 建造者用哪顆模型 | `agents/agent2_build.md` | frontmatter `model` |
-| 建造者的編碼守則、健康檢查等多久、server 配方 | `agents/agent2_build.md` | 「編碼守則」、「Linux 指令慣例」 |
+| 建造者的編碼守則（資安／可維護／前端／測試先行）、健康檢查等多久、server 配方 | `agents/agent2_build.md` | 「編碼守則」、「Linux 指令慣例」 |
 | build-log 分檔要記什麼 | `agents/agent2_build.md` | 「附錄」 |
 | 票級檢查用哪顆模型、紀錄每段字數、要不要順帶品質檢查 | `agents/agent3_ticket_check.md` | frontmatter、「寫紀錄」、「判定」最後一條 |
 | **稽核** | | |
@@ -117,6 +121,8 @@
 | **實測** | | |
 | 實測員用哪顆模型 | `agents/agent4_run.md` | frontmatter `model` |
 | 實測旅程三層、惡意輸入後備測法 | `agents/agent4_run.md` | Step 3 |
+| 視覺檢查表、U 編號類別 | `agents/agent4_run.md` | Step 4b |
+| 幾件視覺發現才先修再結案（5）、哪類算破版 | `agents/agent0_conduct.md` | 建案模式「階段四」去向 |
 | 伺服器啟動等多久、證據命名 | `agents/agent4_run.md` | Step 2、Step 4 |
 | **流程** | | |
 | 稽核退回上限（3）、實測退回上限（2）、跳過階段 | `agents/agent0_conduct.md` | 建案模式「階段三」「階段四」「跳過階段」 |
@@ -132,6 +138,7 @@
 
 - 規格書禁止「待定」；同一輪題目彼此獨立；每輪 ≤4 題；最多 8 輪；總分 ≥9.0 且 ★ 滿分才寫規格書 —— `agents/agent1_plan.md`、`skills/agent1-interview/`
 - 工單 DRAFT 就不准開工 —— `skills/blacktea-dispatch/`
+- 有畫面的專案：「設計系統」章必備、UI 原型要使用者明確說「外觀可以」才定稿、設計系統基座票在所有 UI 票之前、UI 票 DoD 必含視覺驗收（狀態矩陣每格＋與原型對照＋截圖） —— `skills/agent1-spec/`、`agents/agent1_plan.md`、`skills/agent1-tickets/`
 - 建造者禁止猜需求（標 BLOCKED）、永不碰 git、票級檢查不得自判 —— `agents/agent2_build.md`
 - 票級檢查員不讀 build-log 當證據、不信任建造者回報；每票 PASS 才 commit —— `agents/agent3_ticket_check.md`
 - 票面有測試清單的票：先紅後綠（`evidence/TXX-red.log`）、無恆真測試；修復批次每個發現要有會變紅的回饋迴圈、回歸測試、`[DEBUG-]` 清零 —— `agents/agent2_build.md`、`agents/agent3_ticket_check.md`
