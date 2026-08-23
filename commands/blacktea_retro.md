@@ -23,7 +23,7 @@ disable-model-invocation: true
 
 ## Step 1：讀取本案全部工件
 
-讀專案的 `.pipeline/`：`state.md`（跑了幾階段幾輪）、`plan/01-requirements.md` 與 `02-workplan.md`（含 T-Rev 需求變更痕跡）、`03-build-log.md`（索引：票狀態、票級檢查結果、BLOCKED／FAILED、修復輪次）與 `build-log/*.md`（各票的偏離事項、反證紀錄）、`ticket-checks/*.md`（稽核員票級檢查：哪些票第一次沒過、為什麼）、`04-verify-report.md`（發現清單、closed／withdrawn／open、環境問題）、`05-e2e-report.md`（FAIL 與覆蓋）、`evidence/`、`waivers.md`、`output/FINAL-REPORT.md`。另讀現有的 `~/.claude/blacktea/lessons.md`（比對用）。四個角色各自是誰、住在哪個檔，見 `~/.claude/agents/README.md`。
+讀專案的 `.pipeline/`：`state.md`（跑了幾階段幾輪）、`plan/01-requirements.md` 與 `02-workplan.md`（含 T-Rev 需求變更痕跡）、`03-build-log.md`（索引：票狀態、票級檢查結果、BLOCKED／FAILED、修復輪次）與 `build-log/*.md`（各票的偏離事項、反證紀錄）、`ticket-checks/*.md`（票級檢查員的紀錄：哪些票第一次沒過、為什麼）、`04-verify-report.md`（發現清單、closed／withdrawn／open、環境問題）、`05-e2e-report.md`（FAIL 與覆蓋）、`evidence/`、`waivers.md`、`output/FINAL-REPORT.md`。另讀現有的 `~/.claude/blacktea/lessons.md`（比對用）。各角色是誰、住在哪個檔，見 `~/.claude/agents/README.md`。
 
 ## Step 2：統計事實（先數字、後判斷）
 
