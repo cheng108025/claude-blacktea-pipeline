@@ -95,6 +95,7 @@
 | 每輪問幾題、題目能不能綁同一輪、最多幾輪 | `skills/agent1-interview/SKILL.md` | 「訪談規則」第 1 條／第 2 條／最後一條 |
 | 門檻分數、評分表面向、哪些必滿分 ★ | `skills/agent1-interview/SKILL.md` | 「門檻」、「評分表」 |
 | 問題要問得多詳細 | `skills/agent1-interview/SKILL.md` | 「每一題的標準構成」 |
+| 技術棧攤牌那一輪表格有哪幾列、什麼時候問 | `skills/agent1-interview/SKILL.md` | 「訪談規則」→ 必問題——技術棧攤牌 |
 | 規格書要有哪些章、技術棧表；哪些章不可省 | `skills/agent1-spec/SKILL.md` | 「章節菜單」、「五個必備章」 |
 | ticket 要拆多小、六欄長怎樣 | `skills/agent1-tickets/SKILL.md` | 「每張 ticket 的品質要求」、「Ticket 格式」 |
 | T01 做什麼、.gitignore 擋什麼 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」第 2 條 |
