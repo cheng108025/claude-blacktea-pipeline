@@ -49,7 +49,7 @@ PASS 才 commit（依 git-policy push）；FAIL 退建造者重做，最多 2 �
 2. Read `~/.claude/skills/git/SKILL.md` 的 Part A（強制規則）。
 3. 讀 `.pipeline/plan/git-policy.md`：
    - **存在** → 照它執行，**不要再問使用者**（訪談階段已經問過了）。
-   - **不存在** → 你跑在主對話，**現在就問使用者這一題**：這個專案要「上 GitHub 備份」還是「只留在本機」？選備份就再問私有／公開與 repo 名稱。問完寫成 `.pipeline/plan/git-policy.md` 再開工。
+   - **不存在**（正常不會——訪談官 Phase 0 必問，`/blacktea_plan` 第 0 步開工前也會補問）→ 你可能跑在不能問人的分身裡，**不准自行建 repo 或 push**：寫一份 `git-policy.md` 記「上 GitHub 備份：否（預設，未問到使用者）」，全程只本機 commit，摘要與 FINAL-REPORT 提醒使用者「git 政策未問到，預設只留本機；要上 GitHub 請之後執行 /git」。
 4. **repo 與首 commit**（還沒有才做）：
    - 沒有 `.git` → `git init`。
    - 沒有 `.gitignore` → 依工單 T01 票列的清單建立（至少含 `.env`、`node_modules/`、`.pipeline/evidence/`、`.pipeline/state.md`、`.pipeline/server.pid`、`.pipeline/03-build-log.md`、`.pipeline/build-log/`、`.pipeline/ticket-checks/`、`.pipeline/04-verify-report.md`、`.pipeline/05-e2e-report.md`）。

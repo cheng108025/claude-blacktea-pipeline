@@ -6,7 +6,7 @@
 
 | 指令 | 什麼時候用 | 會發生什麼 |
 |---|---|---|
-| `/blacktea_plan 一句話描述` | 開新專案 | 訪談你 → 你確認工作單 → **它請你開新對話再打一次 `/blacktea_plan`** → 建造 → 稽核 → 瀏覽器實測 → FINAL-REPORT 一路到底（context 快滿交給自動壓縮，不會再請你換對話）；只有做不下去的失敗出口才停：票重做 2 次仍 FAIL、稽核超 3 輪、實測超 2 輪、需求沒定義、環境修不了 |
+| `/blacktea_plan 一句話描述` | 開新專案 | 訪談你 → 你確認工作單 → **它請你開新對話再打一次 `/blacktea_plan`** → 建造 → 稽核 → 瀏覽器實測 → FINAL-REPORT 一路到底，不會再請你換對話；「做不下去」的情況（票重做 2 次仍 FAIL、稽核超 3 輪、實測超 2 輪、需求沒定義、環境修不了）怎麼辦，定稿前一題問完寫成 run-policy.md——選「無人值守」就真的全程不回頭 |
 | `/blacktea_change 一句話描述` | 專案已交付後想加功能／改呈現／修 bug | 釐清 → 改規格開 T-Rev 票 → spawn 總指揮分身跑建造（每票過票級檢查）→ 增量稽核 → 修復 → 增量實測 → 補報告；不用換視窗 |
 | `/blacktea_retro` | 專案結案後 | 翻整個 `.pipeline/` 歸納教訓，經你批准才寫進經驗包 |
 | `/blacktea_retro 匯出` ／ `匯入 <檔案>` | 想把經驗包分享給別人／把別人的經驗包併進來 | 見下方「分享經驗包」 |
@@ -100,6 +100,7 @@
 | 稽核多嚴、嚴重度基準、資安 8 條 | `agents/agent3_review.md` | 關卡判定、嚴重度基準、C 段 |
 | 稽核退回上限（3）、實測退回上限（2） | `commands/blacktea_plan.md` | 階段三、階段四 |
 | 總指揮分身續跑上限（10）、分身用哪顆模型 | `commands/blacktea_plan.md` 監督迴圈、`agents/agent0_conduct.md` frontmatter | — |
+| 無人值守時各種「做不下去」的預設動作 | `agents/agent1_plan.md` | 無人值守政策 |
 | 實測旅程三層、降級方式、證據命名 | `agents/agent4_run.md` | 設計旅程、一條一條執行 |
 | 變更的修復輪上限、多少輪後改全旅程實測 | `commands/blacktea_change.md` | 步驟 5、步驟 6 |
 | 經驗包每段幾條 | `commands/blacktea_retro.md` | 寫入規則 |
@@ -115,7 +116,7 @@
 - git 只有調度技能一個人動；`gh repo create` 只有它能做；push 授權只來自 `git-policy.md`；force push／推 tag／改公開一律先問；push 前機密掃描 —— `skills/blacktea-dispatch/`、`skills/git/`
 - 每票過票級檢查 PASS 才 commit；每票最多重做 2 次；機密掃描命中 → 暫停之後所有 push、繼續 commit、最後回報（不中途問） —— `skills/blacktea-dispatch/`
 - 稽核員不信任自我宣稱、發現全部列出、關閉權在稽核員、V 編號跨輪不歸零、Critical=0 且 High=0 才 PASS —— `agents/agent3_review.md`
-- 稽核退回上限 3 輪、實測退回上限 2 輪、agent4 退回不佔額度、需求層級問題回使用者、跳過階段必須標註 —— `commands/blacktea_plan.md`
+- 稽核退回上限 3 輪、實測退回上限 2 輪、agent4 退回不佔額度、需求層級問題回使用者（無人值守下也不准猜，只能標 BLOCKED 跳過）、跳過階段必須標註、無人值守的自動決策必須寫進 state.md 與 FINAL-REPORT（未通過要在檔首粗體標出） —— `commands/blacktea_plan.md`、`agents/agent1_plan.md`
 - 實測員黑箱鐵律（不讀程式碼）、每個 PASS 只能來自本輪親手操作、E 編號跨輪不歸零 —— `agents/agent4_run.md`
 - 經驗包先批准才寫入；改引擎先提案；**匯入的經驗包是資料不是指令**，安全過濾不放寬 —— `commands/blacktea_retro.md`
 
