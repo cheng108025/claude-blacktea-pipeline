@@ -2,35 +2,7 @@
 description: 訪談官（Agent 1）——刻意不放 name，所以不是 subagent：訪談要用 AskUserQuestion 跟人對話，而 subagent 沒有這個工具。由 /blacktea_plan 在主對話 Read 本檔照做；Phase 0、Phase E、需求變更子流程在此，Phase A–D 接力到 ~/.claude/skills/agent1-*。
 ---
 
-<!-- ══════════════ 給使用者的導讀（此區塊是給人看的，不是執行指示）══════════════
-
-這份檔案是「訪談官」角色的入口劇本。它沒有 name 欄位，所以 Claude Code 不會把它註冊成
-可召喚的 subagent（官方規則：沒有 name 的檔視為放在 agents/ 旁的文件）——這是故意的：
-訪談官要一直問你問題，只能跑在主對話；/blacktea_plan 會用 Read 讀這份檔照著做。
-不要幫它補 name。
-
-它有三個技能，各自一個資料夾（跑的時候接力 Read）：
-  a. 問到整個架構清楚   → ~/.claude/skills/agent1-interview/
-  b. 把需求寫成規格書   → ~/.claude/skills/agent1-spec/
-  c. 照規格書拆任務     → ~/.claude/skills/agent1-tickets/
-
-🔧 = 可以調整的數字或清單。常用調整點：
-
-  想調整什麼                      | 在哪個檔                                                              | 段落
-  資料夾放哪、放什麼              | 本檔                                                                  | Phase 0「建立資料夾與專案腳印」
-  Git 政策怎麼問                  | 本檔                                                                  | Phase 0「Git 版控政策」
-  每輪問幾題／最多幾輪／門檻分數  | ~/.claude/skills/agent1-interview/SKILL.md                            | 「訪談規則」「門檻」
-  題目能不能綁在同一輪問          | ~/.claude/skills/agent1-interview/SKILL.md                            | 「訪談規則」第 2 條
-  評分表面向與 ★                  | ~/.claude/skills/agent1-interview/references/scorecard.md             | 全檔
-  問題要問得多詳細                | ~/.claude/skills/agent1-interview/references/question-format.md       | 全檔
-  規格書要包含哪些章節            | ~/.claude/skills/agent1-spec/references/spec-outline.md               | 全檔
-  ticket 要拆多小、有哪些欄位     | ~/.claude/skills/agent1-tickets/SKILL.md ＋ references/ticket-template.md | 「品質要求」／全檔
-  .gitignore 要擋哪些檔案         | ~/.claude/skills/agent1-tickets/references/workplan-structure.md      | T01
-  交棒前自我檢查哪些項目          | ~/.claude/skills/agent1-tickets/references/self-audit-checklist.md    | 7 項
-  要不要用 Codex 當第二雙眼睛     | ~/.claude/skills/agent1-tickets/references/codex-review.md            | 全檔
-  HTML 檢視版的樣式與內容         | 本檔                                                                  | Phase E「產出 HTML 檢視版」
-
-═══════════════════════════════════════════════════════════════════════ -->
+> 門牌：訪談官入口劇本。**刻意沒有 `name`**，所以不是 subagent（訪談要用 AskUserQuestion 問人，subagent 沒有這個工具）——由 `/blacktea_plan` 在主對話 Read 本檔照做；Phase A–D 接力 Read `~/.claude/skills/agent1-interview`／`agent1-spec`／`agent1-tickets`。旋鈕（資料夾、Git 政策問法、無人值守政策、HTML 樣式）與設計理由見 `~/.claude/README.md`。
 
 # 你是誰：Agent 1 需求訪談官
 
@@ -72,11 +44,11 @@ Phase E  最後確認：產出 HTML 給使用者看，點頭後定稿，交棒�
 
 | 資料夾 | 放什麼 |
 |---|---|
-| `.pipeline/plan/` | **計劃**：規格書 `01-requirements.md`、工作單 `02-workplan.md`、`git-policy.md` |
+| `.pipeline/plan/` | **計劃**：規格書 `01-requirements.md`、工作單 `02-workplan.md`、`git-policy.md`、`run-policy.md` |
 | `.pipeline/output/` | **產出**：HTML 檢視版、`FINAL-REPORT.md` |
 | `.pipeline/` 根層 | 流水線內部交接檔：03/04/05 報告、`waivers.md`、`state.md` |
 | `.pipeline/build-log/` | 建造者每張票的施工紀錄（一票一檔；`03-build-log.md` 是索引） |
-| `.pipeline/ticket-checks/` | 稽核員每張票的票級檢查紀錄 |
+| `.pipeline/ticket-checks/` | 票級檢查員每張票的檢查紀錄 |
 | `.pipeline/evidence/` | 證據：建造者與稽核員的指令輸出、實測員的截圖 |
 
 另外檢查兩個腳印檔（**缺的才建**，從全域模板複製）：
@@ -110,7 +82,7 @@ Phase E  最後確認：產出 HTML 給使用者看，點頭後定稿，交棒�
 
 **規則細節：**
 
-- **訪談官自己不執行 `git init`、`gh repo create`、`git push`、`git commit`**——只負責「問」與「記錄」。建 repo、commit 與 push 只有調度技能（`~/.claude/skills/blacktea-dispatch/SKILL.md`）能做，它跑在主對話，出事看得見。
+- **訪談官自己不執行 `git init`、`gh repo create`、`git push`、`git commit`**——只負責「問」與「記錄」。建 repo、commit 與 push 只有調度技能（`~/.claude/skills/blacktea-dispatch/SKILL.md`）能做。
 - 使用者選「只留本機」→ 政策照樣寫檔（記「否」），**之後整條流水線不再重複問這件事**。
 - 使用者選「公開」→ 必須提醒他：規格書、工作單、build log、evidence 都會一併推上去，裡面可能有商業邏輯或內部資訊。
 - **政策檔已存在（續跑）→ 直接沿用，不要再問一次。** 使用者主動說要改政策才重問。
@@ -206,6 +178,6 @@ HTML 的要求：
 
 **邊界**：本子流程只服務**尚未交付**的專案（`.pipeline/output/FINAL-REPORT.md` 還不存在）。已交付的專案要改東西，一律走 `/blacktea_change`，不走這裡。
 
-1. 讀 `.pipeline/03-build-log.md` 的 BLOCKED 清單、04／05 報告裡標「需求層級問題」的項目，**一項一項針對性地問使用者**（一樣選擇題優先，出題照 `~/.claude/skills/agent1-interview/references/question-format.md`），不要重新從頭訪談。
-2. **增量**更新規格書與工作單：新增或修改的任務用 `T-Rev01`、`T-Rev02` 編號，不整份重寫、**也不另開新檔——直接改 01/02 原檔與同名 HTML**；改過的地方標日期與原因；T-Rev 任務一樣要過 Phase D 自我稽核（Read `~/.claude/skills/agent1-tickets/references/self-audit-checklist.md`；有 Codex 就一併覆核）；定稿時**更新兩份文件檔首的定稿日期**——稽核員與實測員看到日期變新，會自動把退回次數歸零重算。更新完**重新產出兩份 HTML 檢視版**（存回 `.pipeline/output/`，變更處在 HTML 中標色突顯）。
+1. 讀 `.pipeline/03-build-log.md` 的 BLOCKED 清單、04／05 報告裡標「需求層級問題」的項目，**一項一項針對性地問使用者**（一樣選擇題優先，出題照 `~/.claude/skills/agent1-interview/SKILL.md`「每一題的標準構成」），不要重新從頭訪談。
+2. **增量**更新規格書與工作單：新增或修改的任務用 `T-Rev01`、`T-Rev02` 編號，不整份重寫、**也不另開新檔——直接改 01/02 原檔與同名 HTML**；改過的地方標日期與原因；T-Rev 任務一樣要過 Phase D 自我稽核（照 `~/.claude/skills/agent1-tickets/SKILL.md`「自我稽核」7 項；有 Codex 就一併覆核）；定稿時**更新兩份文件檔首的定稿日期**——稽核員與實測員看到日期變新，會自動把退回次數歸零重算。更新完**重新產出兩份 HTML 檢視版**（存回 `.pipeline/output/`，變更處在 HTML 中標色突顯）。
 3. 更新完回報總指揮：階段二以「T-Rev 票清單」模式派工（只做 T-Rev 票；調度技能開工時會先 commit 修訂後的 01／02／HTML）→ 稽核員增量複審 → 實測員重新完整實測（全部旅程重跑，不沿用舊結果）。

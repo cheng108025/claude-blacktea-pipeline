@@ -5,22 +5,7 @@ user-invocable: false
 disable-model-invocation: true
 ---
 
-<!-- ══════════════ 給使用者的導讀（此區塊是給人看的，不是執行指示）══════════════
-
-這是訪談官的第三個技能：把規格書拆成一張一張可勾選、可驗證的 ticket，並模擬下游視角找碴。
-由 ~/.claude/agents/agent1_plan.md 在規格書寫完後 Read 本檔照做，跑在主對話。
-
-🔧 = 可以調整的數字或清單：
-
-  想調整什麼                      | 在哪個檔                                                               | 段落
-  ticket 要拆多小                 | 本檔                                                                   | 「每張 ticket 的品質要求」第 1 條
-  ticket 有哪些欄位、長什麼樣     | ~/.claude/skills/agent1-tickets/references/ticket-template.md          | 全檔
-  .gitignore 要擋哪些檔、T01 內容 | ~/.claude/skills/agent1-tickets/references/workplan-structure.md       | T01
-  交棒前自我檢查哪些項目          | ~/.claude/skills/agent1-tickets/references/self-audit-checklist.md     | 7 項
-  待問清單最多追問幾輪            | 同上                                                                   | 第 7 項
-  要不要用 Codex 當第二雙眼睛     | ~/.claude/skills/agent1-tickets/references/codex-review.md             | 全檔（含重度／中度／輕度分級）
-
-═══════════════════════════════════════════════════════════════════════ -->
+> 門牌：訪談官技能 c。由 `~/.claude/agents/agent1_plan.md` 在規格書寫完後 Read 本檔照做，跑在主對話。Ticket 格式、工作單組成、自我稽核清單都在本檔；Codex 覆核（可選）在 `references/codex-review.md`。旋鈕（票要多小、.gitignore 清單、追問輪數）與設計理由見 `~/.claude/README.md`。
 
 # 訪談官技能 c：照規格書拆任務（.pipeline/plan/02-workplan.md）
 
@@ -31,11 +16,52 @@ disable-model-invocation: true
 
 ## 流程
 
-1. Read `~/.claude/skills/agent1-tickets/references/ticket-template.md`（六欄定義與範例）與 `~/.claude/skills/agent1-tickets/references/workplan-structure.md`（檔首 DRAFT、T01、功能票、README 票、文末聲明），照著寫出全部 ticket。
-2. 逐張套用下面「每張 ticket 的品質要求」。
-3. Read `~/.claude/skills/agent1-tickets/references/self-audit-checklist.md`，7 項逐條做完並展示結果；待問清單不空就回去追問（最多 2 輪 🔧）。
+1. 照下面「Ticket 格式」與「工作單的組成」寫出全部 ticket。
+2. 逐張套用「每張 ticket 的品質要求」。
+3. 照「自我稽核（7 項）」逐條做完並展示結果；待問清單不空就回去追問（最多 2 輪 🔧）。
 4. Read `~/.claude/skills/agent1-tickets/references/codex-review.md`，問使用者要不要外部覆核；有跑就依分級處理，重度缺口處理完才能交棒。
 5. 回到 `~/.claude/agents/agent1_plan.md`，接力 Phase E（產 HTML、請使用者確認、定稿）。
+
+## Ticket 格式（每張六欄，缺一不可）
+
+編號規則：從 `T01` 開始、照施工順序依序編號（T01、T02、T03…）；需求變更追加的票用 `T-Rev01`、`T-Rev02`。
+
+虛構範例（會員系統，前面已有 T01 環境檢查、T02 建資料表；登入 API 要先有資料表，所以「依賴」填 T02）：
+
+```markdown
+## T03 使用者登入 API
+- 所屬功能: 帳號系統
+- 內容: POST /api/login，驗證帳密、簽發 session cookie
+- 做法: 在 src/routes/auth.js 新增路由；用 bcrypt 比對密碼雜湊；用 express-session 簽發 cookie
+- 依賴: T02
+- 完成條件(DoD): 正確帳密回 200 + Set-Cookie；錯誤帳密回 401（依規格書「介面契約」）
+- 驗證方式: 背景啟動 server → curl -s -o /dev/null -w "%{http_code}"
+  -X POST http://localhost:3000/api/login -d "..." 應輸出 200 → 停止 server
+```
+
+| 欄位 | 是什麼 |
+|---|---|
+| 所屬功能 | 對應規格書「功能清單」章的哪一項（環境檢查、README 這類記「基礎建設」） |
+| 內容 | 這張票要完成**什麼** |
+| 做法 | **怎麼**做：用什麼套件或方式，**並且必須明確列出會動到的檔案**——使用者靠它看懂工作內容，建造者拿它當實作指引，調度技能靠檔案清單判斷哪些票可以並行、票級檢查靠它核對建造者有沒有動到不該動的檔 |
+| 依賴 | 要先做完哪張票才能做這張。**只有後票真的需要前票的產物才建依賴**——不得因為編號順序、共用唯讀程式碼就建（假依賴會害無關的票不能並行） |
+| 完成條件(DoD) | 怎樣算做完——必須可以直接判對錯；票級檢查會逐條驗 |
+| 驗證方式 | 用哪條指令證明完成條件成立；建造者自己跑一次，票級檢查再獨立跑一次 |
+
+## 工作單的組成（照這個順序寫）
+
+1. **檔首**：「> 狀態：DRAFT」——這是建造階段（調度技能）的門禁：看到 DRAFT 就拒絕開工。只有 Phase E 使用者點頭後才拿掉，並寫上定稿日期。
+2. **T01 環境檢查**（固定第一張，「基礎建設」）：
+   - **專案路徑在 Linux 原生檔案系統**（例：`~/dev/專案名`），**不在 `/mnt/c` 底下**（那是 Windows 磁碟掛載，IO 慢且檔案監看不可靠）；路徑不含空白。
+   - node／python 版本符合規格書。
+   - web 專案：Playwright MCP 可用（專案根目錄的 `.mcp.json` 含 playwright（腳印已內建），或 `claude mcp list` 看得到；都沒有就標 BLOCKED，附解法：從 `~/.claude/blacktea/templates/mcp.json` 複製，或跑 `claude mcp add playwright -- npx -y @playwright/mcp@latest --output-dir .pipeline/evidence`）。
+   - **核對 `.gitignore`** 🔧：`git init` 與首 commit 由調度技能在派 T01 之前完成，`.gitignore` 也由它依本清單先建好；T01 負責核對內容至少含 `.env`、`node_modules/`、`.pipeline/evidence/`、`.pipeline/state.md`、`.pipeline/server.pid`、`.pipeline/03-build-log.md`、`.pipeline/build-log/`、`.pipeline/ticket-checks/`、`.pipeline/04-verify-report.md`、`.pipeline/05-e2e-report.md`，缺的補上。
+   - T01 本身不執行任何 git 指令（建造者一律不碰 git）。
+3. **功能 tickets**：照依賴排順序、編號連續、每張可勾選（`- [ ]`）。**每個功能的最後一張 ticket，完成條件必須包含「`docs/features/<功能名>.md` 已撰寫」**——給人看的功能說明書，固定格式：這功能做什麼（白話）、怎麼使用、由哪些檔案組成、資料怎麼流、對應哪些 ticket。
+4. **README ticket**（固定最後一張，「基礎建設」）：install 指令、**不需要人工介入的背景啟動指令**、port 與健康檢查網址、測試指令、測試資料說明（如有）。完成條件：照 README 從乾淨狀態實際跑得起來。稽核員與實測員的啟動全靠它。
+5. **文末聲明**：「全域驗收清單以 `01-requirements.md` 的『全域驗收清單』章為唯一來源」——只引用、不複製，避免改需求時兩份清單不同步。
+
+（文件分工：README 管「怎麼把專案跑起來」，feature md 管「每個功能怎麼運作」。）
 
 ## 每張 ticket 的品質要求
 
@@ -44,3 +70,13 @@ disable-model-invocation: true
 - **驗證實作偏好**：規格書裡標「實作偏好（未驗證）」的項目，寫「做法」欄時逐項驗證——可行就採用、有問題就修正或拒絕，並在決策紀錄註明依據；不得未經驗證直接照抄。
 - **驗證指令**：HTTP 用 `curl`；丟棄輸出用 `-o /dev/null`；長駐服務「背景啟動→輪詢健康檢查→驗證→關閉（kill 後確認 port 已釋放）」；全部指令不能等待人工輸入。
 - **同一檔案在一張票裡只能有一個動作**（「新增」或「改寫」或「保留原內容只加一段」擇一），不准同時寫「整份改寫」又「原內容暫留」這種互相矛盾的做法。
+
+## 自我稽核（7 項：工作單產出後、給使用者看之前，逐條做完並展示結果）
+
+1. **覆蓋對照（雙向）**：(a) 「功能清單」章的每個功能，至少有一張 ticket 的「所屬功能」指向它；反過來每張 ticket 的「所屬功能」都對得到「功能清單」的項目（或「基礎建設」）；頁面／API／資料實體同樣都有 ticket 對應；(b) 「全域驗收清單」跟「功能清單」「介面契約」「頁面清單」（後兩章有寫的話）完全一致，每個項目至少被一條旅程走到。零缺口才過。
+2. **建造者模擬**：一項一項問自己：「如果我是建造者，只拿這兩份文件，做這項時有沒有任何要用猜的決定？」有 → 能補預設就補進決策紀錄，不能就記進待問清單。
+3. **實測員模擬**：一條一條旅程問自己：「如果我是實測員，只拿「全域驗收清單」章＋README，能不能實際執行每一步、直接判 PASS/FAIL？」判不了 → 補具體輸入值和預期結果。
+4. **模糊詞掃描**：找出完成條件裡的「適當／合理／正常／良好／之類／等等」，全部改寫成可判對錯的說法。
+5. **依賴檢查**：依賴的編號都存在、能排出先後順序、沒有「A 等 B、B 又等 A」的死結（主序列 T01..Tnn 連續；`T-RevNN` 是需求變更的合法追加編號）。反向也查：每條依賴都真的必要（後票需要前票的產物或決策），假依賴刪掉——依賴越少，建造階段能並行的票越多。
+6. **指令檢查**：每條驗證指令符合品質要求、不用人工介入；README ticket 存在、啟動指令可背景執行；每個功能的最後一張 ticket，DoD 都含對應的 `docs/features/` 功能文件。
+7. **待問清單處理**：清單不是空的 → 回去**最多再追問 2 輪** 🔧（出題照 `~/.claude/skills/agent1-interview/SKILL.md`「每一題的標準構成」）；還是沒答案的，明確記成「（預設，可改）」收進決策紀錄——不准留白。
