@@ -81,7 +81,7 @@
                         （分身裡）dispatch 建造 ─▶ 稽核員增量 ─▶ 修復 ─▶ 實測員增量實測 ─▶ 補 FINAL-REPORT
 ```
 
-交接靠 `.pipeline/` 裡的檔案，不靠對話：`plan/01-requirements.md`（規格書）、`plan/02-workplan.md`（工單）、`plan/ui-prototype.html`（外觀契約，有畫面才有）、`plan/git-policy.md`、`plan/run-policy.md`（無人值守政策）、`03-build-log.md`（索引）＋`build-log/TXX.md`（每票施工紀錄）、`ticket-checks/TXX.md`（每票檢查紀錄）、`04-verify-report.md`、`05-e2e-report.md`、`evidence/`、`state.md`、`output/FINAL-REPORT.md`。
+交接靠 `.pipeline/` 裡的檔案，不靠對話：`plan/01-requirements.md`（規格書）、`plan/02-workplan.md`（工單）、`plan/ui-prototype.html`（外觀契約，有畫面才有）、`plan/git-policy.md`、`plan/run-policy.md`（無人值守政策）、`state.md`（檔首「目前輪資料夾」）、`waivers.md`、`output/FINAL-REPORT.md`；**每一次生成一個輪資料夾** `rounds/<NN>/`（`01`＝首次建造，每跑一次 `/blacktea_change` 多一個 `02-T-Rev01`、`03-T-Rev02`…），裡面才是 `03-build-log.md`（索引）＋`build-log/TXX.md`（每票施工紀錄）、`ticket-checks/TXX.md`（每票檢查紀錄）、`04-verify-report.md`、`05-e2e-report.md`、`evidence/`。各角色檔用 `<R>` 指本輪資料夾；舊專案平放在 `.pipeline/` 頂層的產出，調度技能開工時會自動搬進 `rounds/01/`。
 
 ## 想調整什麼 → 去哪個檔
 
@@ -108,6 +108,7 @@
 | **建造** | | |
 | 同時派幾隻建造者、哪些票永遠不並行 | `skills/blacktea-dispatch/SKILL.md` | ③ |
 | 票級檢查一次跑幾隻、每票重做幾次 | `skills/blacktea-dispatch/SKILL.md` | ⑤ |
+| 輪資料夾 `rounds/<NN>` 怎麼命名、舊專案怎麼搬 | `skills/blacktea-dispatch/SKILL.md` | ②-6 |
 | build-log 索引長什麼樣 | `skills/blacktea-dispatch/SKILL.md` | ⑧ |
 | 建造者用哪顆模型 | `agents/agent2_build.md` | frontmatter `model` |
 | 建造者的編碼守則（資安／可維護／前端／測試先行）、健康檢查等多久、server 配方 | `agents/agent2_build.md` | 「編碼守則」、「Linux 指令慣例」 |

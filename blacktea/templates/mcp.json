@@ -2,7 +2,7 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest", "--output-dir", ".pipeline/evidence"]
+      "args": ["-y", "@playwright/mcp@latest", "--output-dir", ".pipeline/mcp-output"]
     }
   }
 }

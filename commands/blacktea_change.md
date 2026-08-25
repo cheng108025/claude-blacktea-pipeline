@@ -30,7 +30,7 @@ disable-model-invocation: true
 - 不符合（專案還在建造中、或根本沒有 `.pipeline/`）→ 停，告訴使用者：「這個專案還沒交付／不是流水線專案，請用 `/blacktea_plan`」。
 - `git status` 必須乾淨；讀 `.pipeline/plan/git-policy.md`，政策為「上 GitHub 備份：是」才檢查 `origin` 可達。工作區有殘留改動 → 先問使用者那是什麼，不要蓋掉。
 - 讀 `~/.claude/blacktea/lessons.md`（全域經驗包）與 state.md 的各「T-RevNN 進度」清單，知道前幾輪改了什麼、還有哪些 V-xxx open。
-- 舊專案若沒有 `.pipeline/build-log/`、`.pipeline/ticket-checks/` 或 `03-build-log.md` 不是索引格式 → 先告知使用者，把舊的 `03-build-log.md` 改名為 `03-build-log-legacy.md` 保留，由調度技能建立新目錄與索引；稽核員核對票級檢查時只看索引表列出的票。
+- 舊專案的產出若還平放在 `.pipeline/` 頂層（沒有 `.pipeline/rounds/`）→ 先告知使用者：調度技能開工時會把它們搬進 `.pipeline/rounds/01/`；`03-build-log.md` 不是索引格式的話也由它改名 `-legacy` 保留並建新索引；稽核員核對票級檢查時只看索引表列出的票。
 
 票號：看 `02-workplan.md` 檔尾最後一張 `T-RevNN`，本次＝NN+1（沒有就從 T-Rev01 起）。決策編號：看 `01-requirements.md` 決策紀錄最後一個 `Dnn`，本次＝nn+1。
 
@@ -56,6 +56,8 @@ disable-model-invocation: true
 6. **更新 01／02 兩份檔首的定稿日期為本次變更日**——稽核員與實測員看到日期變新，會自動把輪次歸零重算。
 
 改 `02-workplan.md`：檔首若有「模組間共用契約」節則同步（型別、函式簽章新增**選用**引數、區塊順序）；檔尾加 `T-RevNN` 票，欄位同既有票（照 `~/.claude/skills/agent1-tickets/SKILL.md`「Ticket 格式」節）：所屬功能／內容／**做法（逐檔逐函式寫，含測試清單與文件清單）**／依賴／**完成條件（DoD）**／驗證方式。DoD 必含：既有行為逐字不變的斷言、功能結果層的斷言、文件無殘留舊值；專案有測試就加測試案例數下限；專案有離線／mock 模式就加該模式下的具體斷言。**驗「值對」不只驗「有值」**——涉及數值計算的票，DoD 要求附預期值與算法來源。**同一檔案在票面只能有一個動作**（新增／改寫／只加一段擇一）。改動大就拆 a／b 兩票並標明串行。**改區塊順序、標題或格式時，票面要列出所有靠標題或字面定位的程式（grep 結果）與舊格式相容要求。**總表與覆蓋對照加列。
+
+**決定本次的輪資料夾**：`ls .pipeline/rounds/` 取最大編號＋1（`rounds/` 不存在但頂層有舊產出 → 視為已有 `01`，本次＝`02`），名稱 `<NN>-T-RevNN`（例 `.pipeline/rounds/02-T-Rev01`）；在 `state.md` 檔首寫入或更新 `- 目前輪資料夾: .pipeline/rounds/<NN>-T-RevNN`（目錄本身由調度技能建；T-Rev 票面的 evidence 路徑就寫這個值）。
 
 改完用 `~/.claude/skills/blacktea-dispatch/SKILL.md` 的「**單 commit**」模式 commit（訊息 `plan: T-RevNN …`，依政策 push）。然後：
 - 使用者在步驟 1 選了「先看規格」→ **停在這裡**，用表格摘要改了什麼、列出需要使用者注意的風險點，等回覆；使用者點頭後才進監督迴圈。

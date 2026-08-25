@@ -46,10 +46,12 @@ Phase E  最後確認：產出 HTML 給使用者看，點頭後定稿，交棒�
 |---|---|
 | `.pipeline/plan/` | **計劃**：規格書 `01-requirements.md`、工作單 `02-workplan.md`、`git-policy.md`、`run-policy.md` |
 | `.pipeline/output/` | **產出**：HTML 檢視版、`FINAL-REPORT.md` |
-| `.pipeline/` 根層 | 流水線內部交接檔：03/04/05 報告、`waivers.md`、`state.md` |
-| `.pipeline/build-log/` | 建造者每張票的施工紀錄（一票一檔；`03-build-log.md` 是索引） |
-| `.pipeline/ticket-checks/` | 票級檢查員每張票的檢查紀錄 |
-| `.pipeline/evidence/` | 證據：建造者與稽核員的指令輸出、實測員的截圖 |
+| `.pipeline/` 根層 | 流水線內部交接檔：`waivers.md`、`state.md`（檔首「目前輪資料夾」指向下面哪一輪）、`server.pid` |
+| `.pipeline/rounds/<NN>/` | **每一次生成一個資料夾**：`01`＝首次建造，之後每次 `/blacktea_change` 多一個 `02-T-Rev01`、`03-T-Rev02`…；由調度技能建立，裡面固定有： |
+| `…/build-log/` | 建造者每張票的施工紀錄（一票一檔；同層的 `03-build-log.md` 是索引） |
+| `…/ticket-checks/` | 票級檢查員每張票的檢查紀錄 |
+| `…/evidence/` | 證據：建造者與稽核員的指令輸出、實測員的截圖 |
+| `…/04-verify-report.md`、`05-e2e-report.md` | 該輪的稽核與實測報告 |
 
 另外檢查兩個腳印檔（**缺的才建**，從全域模板複製）：
 
@@ -183,6 +185,6 @@ HTML 的要求：
 
 **邊界**：本子流程只服務**尚未交付**的專案（`.pipeline/output/FINAL-REPORT.md` 還不存在）。已交付的專案要改東西，一律走 `/blacktea_change`，不走這裡。
 
-1. 讀 `.pipeline/03-build-log.md` 的 BLOCKED 清單、04／05 報告裡標「需求層級問題」的項目，**一項一項針對性地問使用者**（一樣選擇題優先，出題照 `~/.claude/skills/agent1-interview/SKILL.md`「每一題的標準構成」），不要重新從頭訪談。
+1. 讀本輪資料夾（state.md「目前輪資料夾」）的 `03-build-log.md` BLOCKED 清單、04／05 報告裡標「需求層級問題」的項目，**一項一項針對性地問使用者**（一樣選擇題優先，出題照 `~/.claude/skills/agent1-interview/SKILL.md`「每一題的標準構成」），不要重新從頭訪談。
 2. **增量**更新規格書與工作單：新增或修改的任務用 `T-Rev01`、`T-Rev02` 編號，不整份重寫、**也不另開新檔——直接改 01/02 原檔與同名 HTML**；改過的地方標日期與原因；T-Rev 任務一樣要過 Phase D 自我稽核（照 `~/.claude/skills/agent1-tickets/SKILL.md`「自我稽核」7 項；有 Codex 就一併覆核）；定稿時**更新兩份文件檔首的定稿日期**——稽核員與實測員看到日期變新，會自動把退回次數歸零重算。更新完**重新產出兩份 HTML 檢視版**（存回 `.pipeline/output/`，變更處在 HTML 中標色突顯）。
 3. 更新完回報總指揮：階段二以「T-Rev 票清單」模式派工（只做 T-Rev 票；調度技能開工時會先 commit 修訂後的 01／02／HTML）→ 稽核員增量複審 → 實測員重新完整實測（全部旅程重跑，不沿用舊結果）。
