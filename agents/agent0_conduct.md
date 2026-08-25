@@ -123,7 +123,11 @@ spawn `agent4-run`，指示「全旅程實測；輪資料夾 `<R>`」；重測�
 
 ## 階段五：完工
 
-撰寫 `.pipeline/output/FINAL-REPORT.md`，固定章節：
+**報告分兩層，都在 `.pipeline/output/`（進 git）**：
+- `reports/<輪名>-report.md`＝**每一次生成一份**（首次建造 `reports/01-report.md`；之後每次 `/blacktea_change` 各一份 `reports/02-T-Rev01-report.md`…，輪名＝`<R>` 的資料夾名）。
+- `FINAL-REPORT.md`＝**總覽**：檔首一張「各輪報告」表（每輪一列：輪名｜日期｜標題｜commits a..b｜稽核／實測關卡結果｜報告路徑），後面接累積的已知限制、waivers、待使用者裁決；細節看各輪報告。
+
+本階段先寫 `reports/01-report.md`，固定章節：
 
 1. 總結：做了什麼、規格定稿版本、共跑了幾輪
 2. 通過的檢查：build 整體檢查、票級檢查 N/N、稽核關卡（輪次）、實測關卡（輪次）、固定一行「**黑箱實測：已跑（全旅程，第 N 輪）**」；另一行「**本輪產出**：`<R>/`（build-log／ticket-checks／evidence／03／04／05 都在裡面）」
@@ -132,7 +136,7 @@ spawn `agent4-run`，指示「全旅程實測；輪資料夾 `<R>`」；重測�
 5. 被跳過的階段（如有，註明原因）
 6. **無人值守自動決策**（如有）：逐條抄 state.md「自動決策」節——情況、採取的動作、證據；未完成票／待補需求／未實測項目都在這裡；**若有「稽核未通過」或「實測未通過」，也要在報告檔首第一行用粗體標出**，不准藏在後面。接著抄 state.md「待使用者裁決」表（Q-nn 全列），最後一行固定寫：「**回來後打 `/blacktea_change`（不帶參數）會一次問完這 N 件，再自動做完。**」
 
-寫完用 dispatch 的「**單 commit**」模式 commit（檔案：`.pipeline/output/FINAL-REPORT.md` 與尚未入庫的 `.pipeline/output/*.html`；訊息 `docs: FINAL-REPORT`；依政策 push）。更新 state.md 為「完成」。**摘要**：做了什麼、通過哪些檢查、已知限制、報告與證據位置；下一步寫「提醒使用者跑 `/blacktea_retro`」。以「完成」狀態回報。
+再寫 `FINAL-REPORT.md`：檔首「各輪報告」表（此時只有 `01` 一列，指向 `reports/01-report.md`）＋ 上面第 3～6 節原樣抄一份（總覽要能單獨看懂）。寫完用 dispatch 的「**單 commit**」模式 commit（檔案：`.pipeline/output/FINAL-REPORT.md`、`.pipeline/output/reports/01-report.md` 與尚未入庫的 `.pipeline/output/*.html`；訊息 `docs: FINAL-REPORT`；依政策 push）。更新 state.md 為「完成」。**摘要**：做了什麼、通過哪些檢查、已知限制、報告與證據位置；下一步寫「提醒使用者跑 `/blacktea_retro`」。以「完成」狀態回報。
 
 ## 跳過階段（不建議，但允許）
 
@@ -197,7 +201,8 @@ spawn `agent4-run`，指示「**增量實測：Jxx, Jyy；輪資料夾 `<R>`**�
 
 ## 步驟 7：收尾
 
-1. `FINAL-REPORT.md` 加一節「交付後需求變更 T-RevNN：<標題>（日期，commits a..b）」，固定格式：一段使用者原話與裁決 → 階段表（規格／建造（含票級檢查）／稽核第 N 輪／修復輪／實測，各一列含 commit 與結果）→ 固定一行「**黑箱實測：已跑（增量，旅程 Jxx）／已跑（全旅程）／未跑**」→ 新增已知限制與提醒（續編號）→ 仍 open 項目 → 一行「**本輪產出**：`<R>/`」→ 無人值守自動決策（如有，抄 state.md「自動決策」節；有未通過就在本節第一行粗體標出）。更新檔首 HEAD、輪次與 V 編號範圍。用調度技能單 commit（依政策 push）。
+1. **本輪報告** `.pipeline/output/reports/<輪名>-report.md`（輪名＝`<R>` 的資料夾名，例 `02-T-Rev01-report.md`；每次變更各一份，不寫進別輪的檔），標題「交付後需求變更 T-RevNN：<標題>（日期，commits a..b）」，固定章節：一段使用者原話與裁決 → 改了什麼（表格：功能／檔案／票）→ 階段表（規格／建造（含票級檢查）／稽核第 N 輪／修復輪／實測，各一列含 commit 與結果）→ 固定一行「**黑箱實測：已跑（增量，旅程 Jxx）／已跑（全旅程）／未跑**」→ 本輪新增的已知限制與提醒（編號接 FINAL-REPORT 續編）→ 仍 open 項目 → 一行「**本輪產出**：`<R>/`」→ 無人值守自動決策（如有，抄 state.md「自動決策」節；有未通過就在報告檔首第一行粗體標出）。
+1b. **更新 `FINAL-REPORT.md` 總覽**：「各輪報告」表加一列（指向本輪報告）；已知限制節續編本輪新增項、已解決的標 closed；待使用者裁決表同步；更新檔首 HEAD 與 V 編號範圍。**不再把整節內容貼進 FINAL-REPORT**——細節在本輪報告。兩檔用調度技能單 commit（訊息 `docs: report <輪名>`，依政策 push）。
 2. `state.md`：「T-RevNN 進度」檢查清單全打勾，加一行「待使用者」。
 3. **摘要**：改了什麼（用表格）、產出現在長什麼樣、抓到並修掉什麼、留給使用者的事——**待辦只在這裡列一次**；下一步寫「提醒使用者跑 `/blacktea_retro`」。以「完成」狀態回報。
 
@@ -212,5 +217,5 @@ spawn `agent4-run`，指示「**增量實測：Jxx, Jyy；輪資料夾 `<R>`**�
 - [ ] 步驟 4 稽核第 N 輪 → PASS/FAIL，新開 V-…
 - [ ] 步驟 5 修復輪 → commit …，調度員核對，04 狀態已更新
 - [ ] 步驟 6 增量實測 → 旅程 Jxx PASS
-- [ ] 步驟 7 收尾 → FINAL-REPORT 第 n 節
+- [ ] 步驟 7 收尾 → reports/<輪名>-report.md ＋ FINAL-REPORT 總覽加列
 ```

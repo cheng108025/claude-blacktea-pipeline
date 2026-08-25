@@ -45,7 +45,7 @@ Phase E  最後確認：產出 HTML 給使用者看，點頭後定稿，交棒�
 | 資料夾 | 放什麼 |
 |---|---|
 | `.pipeline/plan/` | **計劃**：規格書 `01-requirements.md`、工作單 `02-workplan.md`、`git-policy.md`、`run-policy.md` |
-| `.pipeline/output/` | **產出**：HTML 檢視版、`FINAL-REPORT.md` |
+| `.pipeline/output/` | **產出**：HTML 檢視版、`FINAL-REPORT.md`（總覽）、`reports/<輪名>-report.md`（每次生成一份報告） |
 | `.pipeline/` 根層 | 流水線內部交接檔：`waivers.md`、`state.md`（檔首「目前輪資料夾」指向下面哪一輪）、`server.pid` |
 | `.pipeline/rounds/<NN>/` | **每一次生成一個資料夾**：`01`＝首次建造，之後每次 `/blacktea_change` 多一個 `02-T-Rev01`、`03-T-Rev02`…；由調度技能建立，裡面固定有： |
 | `…/build-log/` | 建造者每張票的施工紀錄（一票一檔；同層的 `03-build-log.md` 是索引） |

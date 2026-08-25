@@ -67,7 +67,7 @@ disable-model-invocation: true
 
 1. 用 Agent 工具 spawn `agent0-conduct`，prompt 一行：`變更模式：T-RevNN`（續跑時 `變更模式：T-RevNN，從中斷點續跑`；使用者剛做完決定時 `變更模式：T-RevNN，使用者決定：<內容>，續跑`）。等它回來；它跑的時候不要自己動 `.pipeline/` 或 git。
 2. 讀它回報末段的「狀態」：
-   - **完成** → Read FINAL-REPORT 新增的那一節，向使用者總結（改了什麼、產出現在長什麼樣、抓到並修掉什麼、留給使用者的事——待辦只在這裡列一次），提醒 `/blacktea_retro`。結束。
+   - **完成** → Read 本輪報告 `.pipeline/output/reports/<輪名>-report.md`（輪名＝state.md「目前輪資料夾」的資料夾名），向使用者總結（改了什麼、產出現在長什麼樣、抓到並修掉什麼、留給使用者的事——待辦只在這裡列一次），提醒 `/blacktea_retro`。結束。
    - **續跑** → 轉述一行進度，立刻再 spawn 一隻新的（`變更模式：T-RevNN，從中斷點續跑`）。同一次變更最多續跑 **10 次** 🔧，超過就停下來告訴使用者。
    - **需使用者決定**（修復超 3 輪／需求層級發現要裁決／實測必須打耗額度的真實服務／環境問題）→ 用 AskUserQuestion 把分身寫的問題與選項問使用者；決定寫進 state.md（waiver 寫 `.pipeline/waivers.md`）→ 再 spawn（`…使用者決定：<內容>，續跑`）。
 3. 回報沒有「狀態」行 → 先 Read state.md 確認分身有寫進度；有就當「續跑」，沒有就停下來告訴使用者。

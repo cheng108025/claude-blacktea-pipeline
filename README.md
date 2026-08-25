@@ -78,10 +78,10 @@
   階段四  spawn agents/agent4_run 全旅程瀏覽器實測（上限 2 輪）
   階段五  分身寫 FINAL-REPORT ─▶ 主對話提醒 /blacktea_retro
 你 ─/blacktea_change─▶ 變更官（主對話）：釐清、改規格開 T-Rev 票、單 commit ─▶ spawn agents/agent0_conduct（變更模式）─▶ 主對話監督
-                        （分身裡）dispatch 建造 ─▶ 稽核員增量 ─▶ 修復 ─▶ 實測員增量實測 ─▶ 補 FINAL-REPORT
+                        （分身裡）dispatch 建造 ─▶ 稽核員增量 ─▶ 修復 ─▶ 實測員增量實測 ─▶ 寫本輪報告 output/reports/<輪名>-report.md ＋ FINAL-REPORT 總覽加列
 ```
 
-交接靠 `.pipeline/` 裡的檔案，不靠對話：`plan/01-requirements.md`（規格書）、`plan/02-workplan.md`（工單）、`plan/ui-prototype.html`（外觀契約，有畫面才有）、`plan/git-policy.md`、`plan/run-policy.md`（無人值守政策）、`state.md`（檔首「目前輪資料夾」）、`waivers.md`、`output/FINAL-REPORT.md`；**每一次生成一個輪資料夾** `rounds/<NN>/`（`01`＝首次建造，每跑一次 `/blacktea_change` 多一個 `02-T-Rev01`、`03-T-Rev02`…），裡面才是 `03-build-log.md`（索引）＋`build-log/TXX.md`（每票施工紀錄）、`ticket-checks/TXX.md`（每票檢查紀錄）、`04-verify-report.md`、`05-e2e-report.md`、`evidence/`。各角色檔用 `<R>` 指本輪資料夾；舊專案平放在 `.pipeline/` 頂層的產出，調度技能開工時會自動搬進 `rounds/01/`。
+交接靠 `.pipeline/` 裡的檔案，不靠對話：`plan/01-requirements.md`（規格書）、`plan/02-workplan.md`（工單）、`plan/ui-prototype.html`（外觀契約，有畫面才有）、`plan/git-policy.md`、`plan/run-policy.md`（無人值守政策）、`state.md`（檔首「目前輪資料夾」）、`waivers.md`、`output/FINAL-REPORT.md`（總覽：各輪報告表＋累積已知限制）、`output/reports/<輪名>-report.md`（每次生成一份：`01-report.md`、`02-T-Rev01-report.md`…）；**每一次生成一個輪資料夾** `rounds/<NN>/`（`01`＝首次建造，每跑一次 `/blacktea_change` 多一個 `02-T-Rev01`、`03-T-Rev02`…），裡面才是 `03-build-log.md`（索引）＋`build-log/TXX.md`（每票施工紀錄）、`ticket-checks/TXX.md`（每票檢查紀錄）、`04-verify-report.md`、`05-e2e-report.md`、`evidence/`。各角色檔用 `<R>` 指本輪資料夾；舊專案平放在 `.pipeline/` 頂層的產出，調度技能開工時會自動搬進 `rounds/01/`。
 
 ## 想調整什麼 → 去哪個檔
 
