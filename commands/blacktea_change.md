@@ -65,6 +65,7 @@ disable-model-invocation: true
 
 ## 監督迴圈（主對話在步驟 3–7 的唯一工作）
 
+0. **同時只能有一隻 `agent0-conduct`**：spawn 之前先確認舊的已結束（`ListAgents`），且它派出的子任務沒有還活著的——兩隻總指揮並存會各自派實測員，同時覆寫正式報告與資料庫、互搶 port，兩份 `05-e2e-report.md` 還會互相覆蓋。分身回報「續跑」時同樣先確認它自己已結束才派下一隻；發現有多隻並存 → 先停掉多餘的，再親自查核 git 與 `.pipeline/` 有沒有被兩邊寫壞。
 1. 用 Agent 工具 spawn `agent0-conduct`，prompt 一行：`變更模式：T-RevNN`（續跑時 `變更模式：T-RevNN，從中斷點續跑`；使用者剛做完決定時 `變更模式：T-RevNN，使用者決定：<內容>，續跑`）。等它回來；它跑的時候不要自己動 `.pipeline/` 或 git。
 2. 讀它回報末段的「狀態」：
    - **完成** → Read 本輪報告 `.pipeline/output/reports/<輪名>-report.md`（輪名＝state.md「目前輪資料夾」的資料夾名），向使用者總結（改了什麼、產出現在長什麼樣、抓到並修掉什麼、留給使用者的事——待辦只在這裡列一次），提醒 `/blacktea_retro`。結束。
