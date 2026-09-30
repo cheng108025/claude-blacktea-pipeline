@@ -95,7 +95,10 @@
 | 每輪問幾題、題目能不能綁同一輪、最多幾輪 | `skills/agent1-interview/SKILL.md` | 「訪談規則」第 1 條／第 2 條／最後一條 |
 | 門檻分數、評分表面向、哪些必滿分 ★ | `skills/agent1-interview/SKILL.md` | 「門檻」、「評分表」 |
 | 問題要問得多詳細 | `skills/agent1-interview/SKILL.md` | 「每一題的標準構成」 |
+| 執行方式（本機 vs Docker）怎麼問、選 Docker 要補問什麼、預設 | `skills/agent1-interview/SKILL.md` | 「訪談規則」→ 必問題——執行方式攤牌 |
 | 技術棧攤牌那一輪表格有哪幾列、什麼時候問 | `skills/agent1-interview/SKILL.md` | 「訪談規則」→ 必問題——技術棧攤牌 |
+| 規格書「執行方式」小節要寫什麼（Docker 的映像、port、volume、機密） | `skills/agent1-spec/SKILL.md` | 「章節菜單」4 |
+| 容器化票做什麼、Docker 專案的驗證配方 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」2c、「每張 ticket 的品質要求」→ 驗證指令 |
 | 視覺定調問哪四題、三種風格原型、預設 | `skills/agent1-interview/SKILL.md` | 「訪談規則」→ 必問題——視覺定調 |
 | 設計系統章要有哪幾段（token、狀態矩陣、元件清單） | `skills/agent1-spec/SKILL.md` | 「章節菜單」7b |
 | 設計系統基座票做什麼、UI 票三條硬規定 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」2b、「每張 ticket 的品質要求」 |
