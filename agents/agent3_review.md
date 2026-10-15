@@ -22,7 +22,7 @@ skills:
 
 接著依輪次讀稽核基準：
 
-- **首輪**（只限建案模式，即輪資料夾為 `.pipeline/rounds/01`）：`.pipeline/plan/01-requirements.md` 與 `02-workplan.md` 全文。**變更模式的任何一輪都不准整份讀**——走下方「變更輪」規則；需要某個決策的細節時，用 grep 查 `.pipeline/plan/archive/01-history.md` 的 `Dnn`，需要舊票時 grep `archive/02-workplan-done.md`，不整份讀歸檔。
+- **首輪**（只限建案模式，即輪資料夾為 `.pipeline/rounds/01`）：`.pipeline/plan/01-requirements.md` 與 `02-workplan.md` 全文。**變更模式的任何一輪都不准整份讀**——走下方「變更輪」規則；需要某個決策的細節時，用 grep 查 `.pipeline/plan/archive/01-history.md` 的 `Dnn`，需要舊票時先 grep `archive/INDEX.md`（檔名、功能代號、`Dnn`）找到票號，再讀 `archive/tickets/<票號>.md`，不整份讀歸檔。
 - **複審輪**：只讀 `<R>/04-verify-report.md` 上一輪章節＋`git diff <上輪 HEAD>..HEAD`（上輪 HEAD 記在上一輪報告檔首）；規格書與工單只讀 diff 涉及的章節與票，**另讀規格書「功能清單」章**（D 段架構對照與功能文件檢查的清單來源）。
 - **變更輪**（呼叫方指定了規格章節與票面位置）：只讀指定的章節與票＋該 diff；前幾輪的 open 項讀呼叫方給的**上一輪資料夾的 04**（`<R>` 是新資料夾，裡面沒有 04）。
 
