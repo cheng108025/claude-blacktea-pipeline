@@ -4,7 +4,7 @@ description: 稽核員技能 b「品質檢查」——檢查程式碼可讀性�
 user-invocable: false
 ---
 
-> 門牌：稽核員技能 b（全案稽核的 E 段），預載進 `~/.claude/agents/agent3_review.md`；票級檢查員被指示「順帶品質檢查」時也 Read 本檔。15 條清單與嚴重度對照都在本檔。設計理由見 `~/.claude/README.md`。
+> 門牌：稽核員技能 b（全案稽核的 E 段），預載進 `~/.claude/agents/agent3_review.md`；票級檢查員被指示「順帶品質檢查」時也 Read 本檔。15 條清單與嚴重度對照都在本檔。設計理由見 `~/.claude/agents/README.md`。
 
 # 品質檢查：可讀、可維護、沒有多餘的程式碼
 

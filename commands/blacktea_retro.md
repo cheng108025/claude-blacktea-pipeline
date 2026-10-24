@@ -4,7 +4,7 @@ model: opus
 disable-model-invocation: true
 ---
 
-<!-- 門牌：流水線入口之一——結案復盤（翻 .pipeline/ 歸納教訓，經使用者批准才寫進 ~/.claude/blacktea/lessons.md）；也負責經驗包匯出／匯入／移除來源。旋鈕（每段條數上限、取捨標準、引擎修改門檻、匯入剔除清單）與設計理由見 ~/.claude/README.md。 -->
+<!-- 門牌：流水線入口之一——結案復盤（翻 .pipeline/ 歸納教訓，經使用者批准才寫進 ~/.claude/blacktea/lessons.md）；也負責經驗包匯出／匯入／移除來源。旋鈕（每段條數上限、取捨標準、引擎修改門檻、匯入剔除清單）與設計理由見 ~/.claude/agents/README.md。 -->
 
 # 你是誰：復盤官
 

@@ -5,7 +5,7 @@ user-invocable: false
 disable-model-invocation: true
 ---
 
-> 門牌：訪談官技能 c。由 `~/.claude/agents/agent1_plan.md` 在規格書寫完後 Read 本檔照做，跑在主對話。Ticket 格式、工作單組成、自我稽核清單都在本檔；Codex 覆核（可選）在 `references/codex-review.md`。旋鈕（票要多小、.gitignore 清單、追問輪數）與設計理由見 `~/.claude/README.md`。
+> 門牌：訪談官技能 c。由 `~/.claude/agents/agent1_plan.md` 在規格書寫完後 Read 本檔照做，跑在主對話。Ticket 格式、工作單組成、自我稽核清單都在本檔；Codex 覆核（可選）在 `references/codex-review.md`。旋鈕（票要多小、.gitignore 清單、追問輪數）與設計理由見 `~/.claude/agents/README.md`。
 
 # 訪談官技能 c：照規格書拆任務（.pipeline/plan/02-workplan.md）
 

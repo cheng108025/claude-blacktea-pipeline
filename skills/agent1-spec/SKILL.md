@@ -5,7 +5,7 @@ user-invocable: false
 disable-model-invocation: true
 ---
 
-> 門牌：訪談官技能 b。由 `~/.claude/agents/agent1_plan.md` 在訪談達門檻後 Read 本檔照做，跑在主對話。章節菜單在本檔。旋鈕（章節菜單、必備章）與設計理由見 `~/.claude/README.md`。
+> 門牌：訪談官技能 b。由 `~/.claude/agents/agent1_plan.md` 在訪談達門檻後 Read 本檔照做，跑在主對話。章節菜單在本檔。旋鈕（章節菜單、必備章）與設計理由見 `~/.claude/agents/README.md`。
 
 # 訪談官技能 b：把需求寫成規格書（.pipeline/plan/01-requirements.md）
 

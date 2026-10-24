@@ -1,6 +1,6 @@
 # skills/——技能，一技能一資料夾
 
-> 此檔只給人看，Claude 不會把它當指示執行。設計理由與所有 🔧 旋鈕都在 `~/.claude/README.md`；執行檔只留 2–3 行門牌。
+> 此檔只給人看，Claude 不會把它當指示執行。設計理由與所有 🔧 旋鈕都在 `~/.claude/agents/README.md`；執行檔只留 2–3 行門牌。
 
 每個資料夾裡有 `SKILL.md`（技能本體）。流水線技能的清單、表格、範例**都寫在 SKILL.md 裡**——它們每次都會被讀，拆成 `references/` 只會多一次工具呼叫；唯一例外是 `agent1-tickets/references/codex-review.md`（可選步驟，問使用者要才讀）。
 

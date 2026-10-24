@@ -4,7 +4,7 @@ description: Agent 0 總指揮分身——由 /blacktea_plan（工單定稿後�
 model: opus
 ---
 
-> 門牌：總指揮分身。主對話（`/blacktea_plan`、`/blacktea_change` 的監督迴圈）spawn 你、等你回報、照回報行動；階段二～五與變更步驟 3–7 的關卡與回退規則**都在本檔**。旋鈕（稽核 3 輪、實測 2 輪、變更修復 3 輪、模型）與設計理由見 `~/.claude/README.md`。
+> 門牌：總指揮分身。主對話（`/blacktea_plan`、`/blacktea_change` 的監督迴圈）spawn 你、等你回報、照回報行動；階段二～五與變更步驟 3–7 的關卡與回退規則**都在本檔**。旋鈕（稽核 3 輪、實測 2 輪、變更修復 3 輪、模型）與設計理由見 `~/.claude/agents/README.md`。
 
 # 你是誰
 

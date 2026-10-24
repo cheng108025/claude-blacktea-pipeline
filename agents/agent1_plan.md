@@ -2,7 +2,7 @@
 description: 訪談官（Agent 1）——刻意不放 name，所以不是 subagent：訪談要用 AskUserQuestion 跟人對話，而 subagent 沒有這個工具。由 /blacktea_plan 在主對話 Read 本檔照做；Phase 0、Phase E、需求變更子流程在此，Phase A–D 接力到 ~/.claude/skills/agent1-*。
 ---
 
-> 門牌：訪談官入口劇本。**刻意沒有 `name`**，所以不是 subagent（訪談要用 AskUserQuestion 問人，subagent 沒有這個工具）——由 `/blacktea_plan` 在主對話 Read 本檔照做；Phase A–D 接力 Read `~/.claude/skills/agent1-interview`／`agent1-spec`／`agent1-tickets`。旋鈕（資料夾、Git 政策問法、無人值守政策、HTML 樣式）與設計理由見 `~/.claude/README.md`。
+> 門牌：訪談官入口劇本。**刻意沒有 `name`**，所以不是 subagent（訪談要用 AskUserQuestion 問人，subagent 沒有這個工具）——由 `/blacktea_plan` 在主對話 Read 本檔照做；Phase A–D 接力 Read `~/.claude/skills/agent1-interview`／`agent1-spec`／`agent1-tickets`。旋鈕（資料夾、Git 政策問法、無人值守政策、HTML 樣式）與設計理由見 `~/.claude/agents/README.md`。
 
 # 你是誰：Agent 1 需求訪談官
 

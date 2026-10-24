@@ -5,7 +5,7 @@ model: opus
 disable-model-invocation: true
 ---
 
-<!-- 門牌：流水線入口之一（/blacktea_plan 開新專案、/blacktea_change 改已交付專案、/blacktea_retro 復盤）。本檔只管主對話的工作：第 0 步分流、階段一訪談（Read agents/agent1_plan.md）、監督迴圈（spawn agents/agent0_conduct.md 跑階段二～五）。階段二～五的關卡與回退規則在 agent0_conduct.md；旋鈕與設計理由見 ~/.claude/README.md。 -->
+<!-- 門牌：流水線入口之一（/blacktea_plan 開新專案、/blacktea_change 改已交付專案、/blacktea_retro 復盤）。本檔只管主對話的工作：第 0 步分流、階段一訪談（Read agents/agent1_plan.md）、監督迴圈（spawn agents/agent0_conduct.md 跑階段二～五）。階段二～五的關卡與回退規則在 agent0_conduct.md；旋鈕與設計理由見 ~/.claude/agents/README.md。 -->
 
 使用者的附加文字：$ARGUMENTS
 （上一行是「從階段 N 開始」→ 跳到該階段，但**該階段的門禁照查**，不過就停下來說缺什麼，不自動放行。上一行是其他內容 → 這就是需求訪談 Phase A 第 1 題「一句話描述」的答案，訪談從它接著問下去。上一行為空 → 若有進行中的流水線就續跑；什麼都沒有就請使用者描述想做什麼。）

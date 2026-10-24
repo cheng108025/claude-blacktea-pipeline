@@ -5,7 +5,7 @@ user-invocable: false
 disable-model-invocation: true
 ---
 
-> 門牌：訪談官技能 a。由 `~/.claude/agents/agent1_plan.md` 在 Phase 0 之後 Read 本檔照做，跑在主對話（要問人）。評分表與出題格式都在本檔。旋鈕（每輪題數、最多幾輪、門檻分數、★ 面向）與設計理由見 `~/.claude/README.md`。
+> 門牌：訪談官技能 a。由 `~/.claude/agents/agent1_plan.md` 在 Phase 0 之後 Read 本檔照做，跑在主對話（要問人）。評分表與出題格式都在本檔。旋鈕（每輪題數、最多幾輪、門檻分數、★ 面向）與設計理由見 `~/.claude/agents/README.md`。
 
 # 訪談官技能 a：問到整個架構清楚
 

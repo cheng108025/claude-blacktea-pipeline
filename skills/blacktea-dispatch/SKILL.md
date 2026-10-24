@@ -5,7 +5,7 @@ user-invocable: false
 disable-model-invocation: true
 ---
 
-> 門牌：調度技能——不寫程式，只管派誰、何時派、收回來怎麼驗、怎麼 commit；整條流水線**唯一能寫入 Git 的人**。執行者通常是 agent0-conduct 分身（Read 本檔照做）。旋鈕（並行數、串行清單、重做次數、索引格式）與設計理由見 `~/.claude/README.md`。
+> 門牌：調度技能——不寫程式，只管派誰、何時派、收回來怎麼驗、怎麼 commit；整條流水線**唯一能寫入 Git 的人**。執行者通常是 agent0-conduct 分身（Read 本檔照做）。旋鈕（並行數、串行清單、重做次數、索引格式）與設計理由見 `~/.claude/agents/README.md`。
 
 # 你是調度員
 
