@@ -74,10 +74,10 @@ subagent 沒有 `AskUserQuestion` 工具——被召喚出去的分身中途不�
 | 規格書「執行方式」小節要寫什麼（Docker 的映像、port、volume、機密） | `skills/agent1-spec/SKILL.md` | 「章節菜單」4 |
 | 容器化票做什麼、Docker 專案的驗證配方 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」2c、「每張 ticket 的品質要求」→ 驗證指令 |
 | 視覺定調問哪四題、三種風格原型、預設 | `skills/agent1-interview/SKILL.md` | 「訪談規則」→ 必問題——視覺定調 |
-| 設計系統章要有哪幾段（token、狀態矩陣、元件清單） | `skills/agent1-spec/SKILL.md` | 「章節菜單」7b |
+| 設計系統章要有哪幾段（token、狀態矩陣、元件清單） | `skills/agent1-spec/SKILL.md` | 「章節菜單」9 |
 | 設計系統基座票做什麼、UI 票三條硬規定 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」2b、「每張 ticket 的品質要求」 |
 | UI 原型怎麼做、放哪 | `agents/agent1_plan.md` | Phase E「產出 HTML 檢視版」 |
-| 規格書要有哪些章、技術棧表；哪些章不可省 | `skills/agent1-spec/SKILL.md` | 「章節菜單」、「六個必備章」 |
+| 規格書要有哪些章、技術棧表；哪些章不可省 | `skills/agent1-spec/SKILL.md` | 「章節菜單」、「七個必備章」 |
 | ticket 要拆多小、六欄長怎樣 | `skills/agent1-tickets/SKILL.md` | 「每張 ticket 的品質要求」、「Ticket 格式」 |
 | T01 做什麼、.gitignore 擋什麼 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」第 2 條 |
 | 交棒前自我稽核 7 項、待問清單追問幾輪 | `skills/agent1-tickets/SKILL.md` | 「自我稽核」（第 7 項） |
