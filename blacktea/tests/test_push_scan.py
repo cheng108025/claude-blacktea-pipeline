@@ -215,6 +215,117 @@ class PushScanTests(unittest.TestCase):
         self.assertTrue(any(f["rule"] == "token-pattern" for f in result["findings"]))
         self.assertNotIn(jwt, json.dumps(result))
 
+    def test_prefix_bypass_is_detected(self):
+        # Must-fix #1: a value merely starting with "test" is not a placeholder.
+        v = ("A" * 8) + "9" + ("B" * 11)
+        self.commit("config.ini", "DB_PASS" + "WORD=\"test" + v + "\"\n")
+        code, result = self.scan(self.base)
+        self.assertEqual(code, 1)
+        self.assertTrue(any(f["rule"] == "credential-assignment" for f in result["findings"]))
+        self.assertNotIn(v, json.dumps(result))
+
+    def test_prefix_bypass_in_template_is_detected(self):
+        v = ("A" * 8) + "9" + ("B" * 11)
+        self.commit(".env.example", "DB_PASS" + "WORD=\"test" + v + "\"\n")
+        code, result = self.scan(self.base)
+        self.assertEqual(code, 1)
+        self.assertTrue(any(f["rule"] == "sensitive-path" for f in result["findings"]))
+
+    def test_template_quoted_hash_is_not_treated_as_comment(self):
+        # Must-fix #2: a '#' inside quotes is literal data, not a comment.
+        v = ("A" * 8) + "9" + ("B" * 11)
+        for name, quote in ((".env.example", "\""), (".env.sample", "'")):
+            with self.subTest(name=name):
+                self.commit(name, "FOO_KEY=" + quote + " # " + v + quote + "\n")
+                code, result = self.scan(self.base)
+                self.assertEqual(code, 1)
+                self.assertTrue(any(f["path"] == name and f["rule"] == "sensitive-path"
+                                    for f in result["findings"]))
+                self.git("rm", "-q", name)
+                self.git("commit", "-qm", "remove fixture")
+                self.base = self.git("rev-parse", "HEAD").strip()
+
+    def test_mismatched_quote_characters_are_detected(self):
+        # Must-fix #3: a double-quoted value may contain a literal apostrophe and
+        # vice versa; the old backreference-based rule missed both.
+        v = ("A" * 8) + "9" + ("B" * 11)
+        cases = [
+            "DB_PASS" + "WORD=\"" + v + "'\"\n",
+            "DB_PASS" + "WORD='" + v + "\"'\n",
+        ]
+        for i, line in enumerate(cases):
+            with self.subTest(i=i):
+                name = "mix%d.ini" % i
+                self.commit(name, line)
+                code, result = self.scan(self.base)
+                self.assertEqual(code, 1)
+                self.assertTrue(any(f["path"] == name and f["rule"] == "credential-assignment"
+                                    for f in result["findings"]))
+                self.assertNotIn(v, json.dumps(result))
+                self.git("rm", "-q", name)
+                self.git("commit", "-qm", "remove fixture")
+                self.base = self.git("rev-parse", "HEAD").strip()
+
+    def test_multiline_json_and_yaml_values_are_detected(self):
+        # Must-fix #4: sensitive fields whose value sits on a different line.
+        v = ("A" * 8) + "9" + ("B" * 11)
+        cases = {
+            "config.json": "{\n \"pass" + "word\":\n \"" + v + "\"\n}\n",
+            "config.yml": "pass" + "word: |\n  " + v + "\n",
+            "folded.yml": "pass" + "word: >\n  " + v + "\n",
+            "wrapped.yml": "pass" + "word: \"" + v[:9] + "\n  " + v[9:] + "\"\n",
+        }
+        for name, content in cases.items():
+            with self.subTest(name=name):
+                self.commit(name, content)
+                code, result = self.scan(self.base)
+                self.assertEqual(code, 1, (name, result))
+                self.assertTrue(any(f["path"] == name and f["rule"] == "credential-assignment"
+                                    for f in result["findings"]))
+                self.assertNotIn(v, json.dumps(result))
+                self.git("rm", "-q", name)
+                self.git("commit", "-qm", "remove fixture")
+                self.base = self.git("rev-parse", "HEAD").strip()
+
+    def test_pathological_fixture_word_value_scans_quickly(self):
+        # Must-fix #5 case A: a 99-byte quoted value used to take 3+ seconds.
+        import time
+        v = ("A" * 8) + "9" + ("B" * 11)
+        value = ("X" * 64) + v
+        self.commit("config.ini", "DB_PASS" + "WORD=\"" + value + "\"\n")
+        started = time.perf_counter()
+        code, result = self.scan(self.base)
+        elapsed = time.perf_counter() - started
+        self.assertLess(elapsed, 2.0, "scan took %.2fs, expected sub-second" % elapsed)
+        self.assertEqual(code, 1)
+        self.assertTrue(any(f["rule"] == "credential-assignment" for f in result["findings"]))
+
+    def test_pathological_repeated_keyword_blob_scans_quickly(self):
+        # Must-fix #5 case B: a blob of nothing but "password" (no '=' at all)
+        # used to take ~10s per MiB.
+        import time
+        self.commit("large.txt", "pass" + "word" * (300_000 // 8))
+        started = time.perf_counter()
+        code, result = self.scan(self.base)
+        elapsed = time.perf_counter() - started
+        self.assertLess(elapsed, 2.0, "scan took %.2fs, expected sub-second" % elapsed)
+        self.assertEqual(code, 0, result)
+
+    def test_pathological_large_quoted_value_scans_quickly(self):
+        # A legitimate-looking multi-MB quoted value: the alternation-per-character
+        # form of the quoted-value pattern was slow here even without catastrophic
+        # backtracking (regression guard for the run-then-escape rewrite).
+        import time
+        v = ("A" * 8) + "9" + ("B" * 11)
+        value = ("X" * (2 * 1024 * 1024)) + v
+        self.commit("config.ini", "DB_PASS" + "WORD=\"" + value + "\"\n")
+        started = time.perf_counter()
+        code, result = self.scan(self.base)
+        elapsed = time.perf_counter() - started
+        self.assertLess(elapsed, 2.0, "scan took %.2fs, expected sub-second" % elapsed)
+        self.assertEqual(code, 1)
+        self.assertTrue(any(f["rule"] == "credential-assignment" for f in result["findings"]))
+
     def test_no_pending_commits_still_checks_final_tree(self):
         code, result = self.scan(self.base)
         self.assertEqual(code, 0)
