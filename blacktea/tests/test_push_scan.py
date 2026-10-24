@@ -27,6 +27,7 @@ class PushScanTests(unittest.TestCase):
         return subprocess.check_output(["git", *args], cwd=self.repo, stderr=subprocess.PIPE).decode()
 
     def commit(self, name, content):
+        (self.repo / name).parent.mkdir(parents=True, exist_ok=True)
         (self.repo / name).write_text(content)
         self.git("add", "--", name)
         self.git("commit", "-qm", "fixture")
@@ -107,6 +108,112 @@ class PushScanTests(unittest.TestCase):
         code, result = self.scan(self.base)
         self.assertEqual(code, 2)
         self.assertEqual(result["status"], "unknown")
+
+    def test_empty_env_template_is_clean(self):
+        self.commit(".env.example", "FRED_API_KEY=\n# comment\nDB_PASS" + "WORD=\"\"\n")
+        self.assertEqual(self.scan(self.base)[0], 0)
+
+    def test_env_template_with_value_is_flagged(self):
+        self.commit(".env.example", "FRED_API_" + "KEY=" + "a1b2c3d4" + "e5f6a7b8c9d0\n")
+        code, result = self.scan(self.base)
+        self.assertEqual(code, 1)
+        self.assertTrue(any(f["rule"] == "sensitive-path" for f in result["findings"]))
+
+    def test_template_with_plain_word_value_is_flagged(self):
+        self.commit(".env.sample", "HOST=productionhostname\n")
+        self.assertEqual(self.scan(self.base)[0], 1)
+
+    def test_real_env_file_is_still_flagged(self):
+        self.commit(".env", "FRED_API_KEY=\n")
+        self.assertEqual(self.scan(self.base)[0], 1)
+
+    def test_prefixed_and_unquoted_assignments_are_detected(self):
+        cases = [
+            "FRED_API_" + "KEY=\"a1b2c3d4e5f6a7b8c9d0\"\n",
+            "DB_PASS" + "WORD=\"Zq7vLm2pRx9w\"\n",
+            "AWS_SECRET_ACCESS_" + "KEY=\"wJalrXUtnFEMI7K7MDENGbPxRfiCYEXAMPLEKY\"\n".replace("EXAMPLE", "QWERTYU"),
+            "pass" + "word=hunter2hunter2\n",
+            "FRED_API_" + "KEY=a1b2c3d4e5f6a7b8c9d0\n",
+        ]
+        for i, line in enumerate(cases):
+            with self.subTest(i=i):
+                name = "conf%d.ini" % i
+                self.commit(name, line)
+                code, result = self.scan(self.base)
+                self.assertEqual(code, 1)
+                self.assertTrue(any(f["path"] == name and f["rule"] == "credential-assignment"
+                                    for f in result["findings"]))
+                self.assertNotIn(line.split("=", 1)[1].strip().strip('"'), json.dumps(result))
+                self.git("rm", "-q", name)
+                self.git("commit", "-qm", "remove fixture")
+                self.base = self.git("rev-parse", "HEAD").strip()
+
+    def test_code_references_and_fixtures_are_not_flagged(self):
+        lines = [
+            "api_key = os.environ[\"FRED_API_KEY\"]",
+            "token = get_token()",
+            "pass" + "word = config.db_password",
+            "pass" + "word=$DB_PASSWORD",
+            "api_key=SECRET123",
+            "pass" + "word = 'abc123secret'",
+            "api_key=***",
+            "api_key=&lt;key&gt;",
+            "FRED_API_KEY=`，值為空的範本",
+            "secret: \"your-key-here\"",
+            "token_count = 1234567890",
+            "url = f\"x?api_" + "key={config.FRED_API_KEY}\"",
+            "tokens = [part.strip() for part in raw]",
+            "api_" + "key=SECRETAB",
+        ]
+        self.commit("fixtures.py", "\n".join(lines) + "\n")
+        code, result = self.scan(self.base)
+        self.assertEqual(code, 0, result)
+
+    def test_empty_assignment_does_not_borrow_next_line(self):
+        self.commit("conf.ini", "PASS" + "WORD=\nNEXT=a1b2c3d4e5f6a7b8\n")
+        self.assertEqual(self.scan(self.base)[0], 0)
+
+    def test_template_with_raw_material_is_flagged(self):
+        cases = {
+            "token.sample": "Zq7vLm2pRx9wKt4n" + "Bc8dHf3jMs6q\n",
+            "secrets.example": "db:\n  pass" + "word: \"\"\n",
+            ".env.template": "FRED_API_" + "KEY=" + "a1b2c3d4e5f6" + "a7b8 # real\n",
+            ".env.dist": "PORT=8080\n",
+        }
+        for name, content in cases.items():
+            with self.subTest(name=name):
+                self.commit(name, content)
+                code, result = self.scan(self.base)
+                self.assertTrue(any(f["path"] == name and f["rule"] == "sensitive-path"
+                                    for f in result["findings"]))
+
+    def test_template_comments_and_inline_notes_are_clean(self):
+        self.commit("config/.ENV.Example",
+                    "# get one at the provider\nexport FRED_API_" + "KEY=  # fill in\nDB_PASS" + "WORD='changeme'\r\n")
+        self.assertEqual(self.scan(self.base)[0], 0)
+
+    def test_real_values_containing_fixture_words_are_detected(self):
+        cases = [
+            "pass" + "word = \"MyTest" + "Pass2024!\"\n",
+            "API_" + "KEY=Qw8test" + "Zx3Lp9Vn2Rt7\n",
+            "secret: \"Where" + "Is9Kz4Lq\"\n",
+            "DB_PASS" + "WORD=Hunter" + "hunter\n",
+            "JWT_SEC" + "RET=Ab9-cD8_" + "eF7.gH6-iJ5\n",
+        ]
+        for i, line in enumerate(cases):
+            with self.subTest(i=i):
+                name = "real%d.cfg" % i
+                self.commit(name, line)
+                code, result = self.scan(self.base)
+                self.assertTrue(any(f["path"] == name and f["rule"] == "credential-assignment"
+                                    for f in result["findings"]), line)
+
+    def test_jwt_is_detected(self):
+        jwt = "ey" + "J" + "hbGciOiJIUzI1NiJ9" + ".ey" + "J" + "zdWIiOiIxMjM0NTY3In0" + ".c2lnbmF0dXJl"
+        self.commit("note.txt", "auth " + jwt + "\n")
+        code, result = self.scan(self.base)
+        self.assertTrue(any(f["rule"] == "token-pattern" for f in result["findings"]))
+        self.assertNotIn(jwt, json.dumps(result))
 
     def test_no_pending_commits_still_checks_final_tree(self):
         code, result = self.scan(self.base)
