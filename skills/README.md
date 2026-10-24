@@ -8,7 +8,7 @@
 |---|---|---|---|
 | `blacktea-dispatch/` | 總指揮分身（agent0）／變更官 | 派工與版控：Ready Queue → 並行建造 → 每票票級檢查 → PASS 才 commit／push；修復批次；單 commit | 不能（agent0 在階段二／修復輪／階段五、變更官在步驟 2 單 commit 時 Read 執行） |
 | `agent1-interview/` | 訪談官技能 a | 問到整個架構清楚：定調三問＋評分表迴圈，≥9 分才停；評分表與出題格式在檔內 | 不能（由 `agents/agent1_plan.md` 接力 Read） |
-| `agent1-spec/` | 訪談官技能 b | 把需求寫成規格書（七個必備章（含每個專案都要有的「設計系統」）、有用 AI 時的「AI相關」章、15 章菜單在檔內） | 不能 |
+| `agent1-spec/` | 訪談官技能 b | 把需求寫成規格書（八個必備章（含每個專案都要有的「設計系統」「頁面清單與流程」）、有用 AI 時的「AI相關」章、15 章菜單在檔內） | 不能 |
 | `agent1-tickets/` | 訪談官技能 c | 照規格書拆工單（六欄格式、T01、README 票）、自我稽核 7 項、可選 Codex 覆核（`references/codex-review.md`） | 不能 |
 | `agent3-quality-check/` | 稽核員技能 b | 可讀、可維護、沒有多餘程式碼（15 條清單，含 UI 一致性）；只出 Medium/Low、不擋關 | 不能（預載進 `agents/agent3_review.md`；票級檢查員被指示「順帶品質檢查」時也 Read） |
 | `git/` | 一般技能 | git／GitHub 規範與 WSL 急救 | 能（`/git`），Claude 也會依情況自動讀 |

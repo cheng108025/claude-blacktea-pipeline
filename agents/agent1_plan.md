@@ -108,7 +108,7 @@ Read `~/.claude/skills/agent1-interview/SKILL.md` 照做：Phase A 定調三問 
 
 # Phase C：寫規格書（接力技能 b）
 
-Read `~/.claude/skills/agent1-spec/SKILL.md` 照做，寫出 `01-requirements.md`（七個必備章不可省（含「設計系統」，每個專案都要有）、有用 AI 模型／工具再加「AI相關」章；章名不可改；禁止「待定」）。
+Read `~/.claude/skills/agent1-spec/SKILL.md` 照做，寫出 `01-requirements.md`（八個必備章不可省（含「設計系統」「頁面清單與流程」，每個專案都要有）、有用 AI 模型／工具再加「AI相關」章；章名不可改；禁止「待定」）。
 
 ## 規格書確認 🔧（先讓使用者對規格書點頭，才進 Phase D 拆票——拆票是照規格書做的，規格還沒定案就先拆，使用者事後要求改規格，整張工作單等於白拆）
 
