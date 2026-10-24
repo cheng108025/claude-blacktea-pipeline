@@ -17,7 +17,7 @@
 
 ## 大概要花多少錢（2026-08 查價，之後請以官方定價頁為準）
 
-流水線的主引擎是 **Claude**；**Codex 只是可選的第二意見**——整個專案最多跑兩次 `codex exec`（拆完票覆核一次、首輪稽核一次），機器上沒裝就自動跳過，不影響流水線。
+流水線的主引擎是 **Claude**；**Codex 只是可選的第二意見**——預設整個專案只跑兩次 `codex exec`（拆完票覆核一次、首輪稽核一次）；若開工前選了「票級 Codex 驗證：開」，每張票的票級檢查再多一次。機器上沒裝就自動跳過，不影響流水線。
 
 | 角色 | 模型 | 為什麼吃量 |
 |---|---|---|
@@ -32,7 +32,7 @@
 | Claude Pro | $20 | 跑得動但一直撞 5 小時上限：一個視窗大約 2–4 張票就要等解鎖；靠 `state.md` 斷點續跑不會壞，但十幾張票的系統會拖成好幾天 |
 | **Claude Max 5x（建議最低）** | $100 | 一天內跑完一個小型系統（10–15 張票、稽核 1–2 輪）的門檻 |
 | Claude Max 20x | $200 | 同時開兩個專案、每天都在跑、或常常 20 張票以上再升；可先買 5x 撞到週上限再升級 |
-| ChatGPT Plus（Codex，可選） | $20 | 一案只呼叫兩次，Plus 額度綽綽有餘；Pro $100/$200 對這條線是浪費。不買就跳過外部覆核 |
+| ChatGPT Plus（Codex，可選） | $20 | 預設一案只呼叫兩次，Plus 額度綽綽有餘；開啟票級 Codex 驗證則每票多一次，票多的專案留意額度。Pro $100/$200 對這條線是浪費。不買就跳過外部覆核 |
 
 **結論：最低 $100/月（Max 5x）；要跨廠牌覆核再加 $20（ChatGPT Plus）＝ $120/月。** 偶爾才開一個專案的人可以改走 API 按量計費（Opus $5／$25、Sonnet $3／$15 每百萬 token 輸入／輸出），一個小系統跑完粗估 $30–100；每週都在跑的話訂閱划算得多。
 
@@ -120,6 +120,7 @@
 | 建造者的編碼守則（資安／可維護／前端／測試先行）、健康檢查等多久、server 配方 | `agents/agent2_build.md` | 「編碼守則」、「Linux 指令慣例」 |
 | build-log 分檔要記什麼 | `agents/agent2_build.md` | 「附錄」 |
 | 票級檢查用哪顆模型、紀錄每段字數 | `agents/agent3_ticket_check.md` | frontmatter、「寫紀錄」 |
+| 票級檢查要不要加 Codex 交叉驗證（每票多呼叫一次 `codex exec`） | 開工前問使用者，存 `.pipeline/plan/run-policy.md`「票級 Codex 驗證」；問法 `agents/agent1_plan.md` 2.5；派工 `skills/blacktea-dispatch/SKILL.md` ⑤-2；做法 `agents/agent3_ticket_check.md` 步驟 8 | 欄位 開／關 |
 | 票級檢查要不要順帶品質檢查 | `skills/blacktea-dispatch/SKILL.md` | ⑤-2（在指示末尾加「順帶品質檢查」） |
 | **稽核** | | |
 | 稽核員用哪顆模型 | `agents/agent3_review.md` | frontmatter `model` |
