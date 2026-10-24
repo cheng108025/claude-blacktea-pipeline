@@ -8,9 +8,9 @@
 
 | 指令 | 什麼時候用 | 會發生什麼 |
 |---|---|---|
-| `/blacktea_plan 一句話描述` | 開新專案 | 訪談你 → 你確認工作單 → **它請你開新對話再打一次 `/blacktea_plan`** → 建造 → 稽核 → 瀏覽器實測 → FINAL-REPORT 一路到底，不會再請你換對話；「做不下去」的情況（票重做 2 次仍 FAIL、稽核超 3 輪、實測超 2 輪、需求沒定義、環境修不了）怎麼辦，定稿前一題問完寫成 run-policy.md——選「無人值守」就真的全程不回頭 |
+| `/blacktea_plan 一句話描述` | 開新專案 | 訪談你 → 你確認工作單 → **它請你開新對話再打一次 `/blacktea_plan`** → 建造 → 稽核 → 瀏覽器實測 → FINAL-REPORT 一路到底，不會再請你換對話；「做不下去」的情況（票重做 2 次仍 FAIL、稽核達 3 輪仍 FAIL、實測達 2 輪仍 FAIL、需求沒定義、環境修不了）怎麼辦，定稿前一題問完寫成 run-policy.md——選「無人值守」就真的全程不回頭 |
 | `/blacktea_change 一句話描述` | 專案已交付後想加功能／改呈現／修 bug；或**不帶參數**回頭處理無人值守期間跳過的待裁決事項 | 釐清（待裁決的一次問完）→ 改規格開 T-Rev 票 → spawn 總指揮分身跑建造（每票過票級檢查）→ 增量稽核 → 修復 → 增量實測 → 補報告；不用換視窗 |
-| `/blacktea_retro` | 專案結案後 | 翻整個 `.pipeline/` 歸納教訓，經你批准才寫進經驗包 |
+| `/blacktea_retro` | 專案結案後 | 按復盤檢查點只看新增已完成輪次；先索引、再針對異常查證，經你批准才寫經驗包 |
 | `/blacktea_retro 匯出` ／ `匯入 <檔案>` | 想把經驗包分享給別人／把別人的經驗包併進來 | 見下方「分享經驗包」 |
 
 工單定稿後是**固定換手點**：總指揮會停下來請你開新對話、打 `/blacktea_plan`（不帶參數）再開工——訪談把 context 堆得很厚，建造階段換乾淨的對話跑。中斷（用量上限、關機、重啟）後也是同一招：再打一次同一個指令（不帶參數）就會從 `.pipeline/state.md` 的中斷點續跑。`/blacktea_plan 從階段 3 開始` 可以跳階段（門禁照查）。另外三個一般技能 `/git`、`/vscode`、`/clawd` 與流水線無關。
@@ -53,13 +53,13 @@
 │   ├── agent3_review.md       稽核員（subagent，name: agent3-review，opus）——全案稽核；預載 skills/agent3-quality-check。
 │   └── agent4_run.md          實測員（subagent，name: agent4-run，sonnet）——真瀏覽器黑箱實測，不讀程式碼。
 ├── skills/     技能，一技能一資料夾（SKILL.md；內容都在本體，只有 codex-review 留 references/）。五個流水線技能都不出現在 / 選單。
-│   ├── blacktea-dispatch/    派工與版控：Ready Queue → 並行建造 → 每票票級檢查 → PASS 才 commit／push。唯一能碰 git 的人。
+│   ├── blacktea-dispatch/    派工與版控：Ready Queue → 並行建造 → 每票票級檢查 → PASS 才 commit／push。唯一能寫入 Git 的人。
 │   ├── agent1-interview/     訪談官技能 a：問到整個架構清楚（評分表 ≥9 才停；評分表與出題格式在檔內）
 │   ├── agent1-spec/          訪談官技能 b：把需求寫成規格書（章節菜單在檔內）
 │   ├── agent1-tickets/       訪談官技能 c：拆工單＋自我稽核 7 項（格式、T01、清單在檔內）＋可選 Codex 覆核（references/）
 │   ├── agent3-quality-check/ 稽核員技能 b：可讀、可維護、沒有多餘程式碼（15 條清單在檔內，含 UI 一致性；不擋關）
 │   ├── git/  vscode/  clawd/  一般技能（git 規範、VS Code 右鍵／連 WSL、桌面寵物）
-└── blacktea/   共用資料：lessons.md（經驗包，復盤官經你批准才寫）、templates/（專案腳印：settings.json、mcp.json）
+└── blacktea/   共用執行契約 runtime-contract.md、經驗包 lessons.md、scan-push.py（唯讀待推歷史掃描）、tests/、templates/（專案腳印）
 ```
 
 ## 誰呼叫誰（一張圖）
@@ -112,6 +112,9 @@
 | 同時派幾隻建造者、哪些票永遠不並行 | `skills/blacktea-dispatch/SKILL.md` | ③ |
 | 票級檢查一次跑幾隻、每票重做幾次 | `skills/blacktea-dispatch/SKILL.md` | ⑤ |
 | 輪資料夾 `rounds/<NN>` 怎麼命名、舊專案怎麼搬 | `skills/blacktea-dispatch/SKILL.md` | ②-6 |
+| 建造進度只維護一段、每票基準 SHA 與檔案擁有權 | `skills/blacktea-dispatch/SKILL.md` | ④、⑧、⑨ |
+| 文件殘留自查與獨立覆核 | `agents/agent2_build.md`、`agents/agent3_ticket_check.md` | Step 2-2b、怎麼檢查 5a |
+| 重建改動前紅燈、新建檔案、隔離變異 | `blacktea/runtime-contract.md`、`agents/agent3_ticket_check.md` | 隔離驗證與紅燈重建、測試先行核對 |
 | build-log 索引長什麼樣 | `skills/blacktea-dispatch/SKILL.md` | ⑧ |
 | 建造者用哪顆模型 | `agents/agent2_build.md` | frontmatter `model` |
 | 建造者的編碼守則（資安／可維護／前端／測試先行）、健康檢查等多久、server 配方 | `agents/agent2_build.md` | 「編碼守則」、「Linux 指令慣例」 |
@@ -130,6 +133,11 @@
 | 幾件視覺發現才先修再結案（5）、哪類算破版 | `agents/agent0_conduct.md` | 建案模式「階段四」去向 |
 | 伺服器啟動等多久、證據命名 | `agents/agent4_run.md` | Step 2、Step 4 |
 | **流程** | | |
+| 建案／變更共同歸檔、重跑不重複、報告與歸檔同 commit | `blacktea/runtime-contract.md`、`agents/agent0_conduct.md` | 完工歸檔、階段五／步驟七 |
+| 專案政策優先序、測試服務歸屬、修復批次命名 | `blacktea/runtime-contract.md` | 政策、服務生命週期、修復批次識別 |
+| 同日規格版本、執行／額度次數與增量範圍、跨輪取號 | `blacktea/runtime-contract.md` | 規格版本與關卡計數、報告搜尋與發現編號 |
+| 復盤增量範圍、完成後推進檢查點 | `commands/blacktea_retro.md` | Step 1、Step 7 |
+| 掃描所有待推 commit、刪除機密後仍會攔、掃描出錯不放行 | `skills/git/SKILL.md`、`blacktea/scan-push.py` | push 前的敏感檔檢查 |
 | 稽核退回上限（3）、實測退回上限（2）、跳過階段 | `agents/agent0_conduct.md` | 建案模式「階段三」「階段四」「跳過階段」 |
 | 變更的修復輪上限（3）、什麼嚴重度要在實測前修、幾輪後改全旅程實測 | `agents/agent0_conduct.md` | 變更模式「步驟 5」「步驟 6」 |
 | 總指揮分身用哪顆模型 | `agents/agent0_conduct.md` | frontmatter `model` |
@@ -146,13 +154,16 @@
 - 有畫面的專案：「設計系統」章必備、UI 原型要使用者明確說「外觀可以」才定稿、設計系統基座票在所有 UI 票之前、UI 票 DoD 必含視覺驗收（狀態矩陣每格＋與原型對照＋截圖） —— `skills/agent1-spec/`、`agents/agent1_plan.md`、`skills/agent1-tickets/`
 - 建造者禁止猜需求（標 BLOCKED）、永不碰 git、票級檢查不得自判 —— `agents/agent2_build.md`
 - 票級檢查員不讀 build-log 當證據、不信任建造者回報；每票 PASS 才 commit —— `agents/agent3_ticket_check.md`
-- 票面有測試清單的票：先紅後綠（`evidence/TXX-red.log`）、無恆真測試；修復批次每個發現要有會變紅的回饋迴圈、回歸測試、`[DEBUG-]` 清零 —— `agents/agent2_build.md`、`agents/agent3_ticket_check.md`
-- git 只有調度技能一個人動；`gh repo create` 只有它能做；push 授權只來自 `git-policy.md`；force push／推 tag／改公開一律先問；push 前機密掃描 —— `skills/blacktea-dispatch/`、`skills/git/`
+- 票面有測試清單：先紅後綠；檢查員用固定派票 SHA 在隔離副本重建行為紅燈／變異，新檔與未追蹤檔也核對，不覆寫正式程式。修復批次要有回饋迴圈、回歸測試；除錯清零只掃程式範圍 —— `blacktea/runtime-contract.md`、建造者／票級檢查員
+- Git 寫入只有調度技能執行；`gh repo create` 只有它能做；push 授權只來自 `git-policy.md`；force push／推 tag／改公開一律先問；push 前機密掃描 —— `skills/blacktea-dispatch/`、`skills/git/`
 - 每票過票級檢查 PASS 才 commit；每票最多重做 2 次；機密掃描命中 → 暫停之後所有 push、繼續 commit、最後回報（不中途問） —— `skills/blacktea-dispatch/`
-- 稽核員不信任自我宣稱、發現全部列出、關閉權在稽核員、V 編號跨輪不歸零、Critical=0 且 High=0 才 PASS —— `agents/agent3_review.md`（覺得誤報太多時用 `.pipeline/waivers.md` 逐條豁免，不要改鬆關卡；建造者可提可重現反證，多數誤報會在機器之間自己消化掉）
+- 稽核發現全部列出、親自重現才關閉；Medium／Low 允許總指揮依規則親自核對關閉。V／E／U 從全域最大值續編，Critical=0 且 High=0 才 PASS；豁免仍只由使用者授權 —— `agents/agent3_review.md`、共通契約
 - 稽核退回上限 3 輪、實測退回上限 2 輪、agent4 退回不佔額度、需求層級問題回使用者（無人值守下也不准猜，只能標 BLOCKED 跳過）、跳過階段必須標註、無人值守的自動決策必須寫進 state.md 與 FINAL-REPORT（未通過要在檔首粗體標出） —— `agents/agent0_conduct.md`、`agents/agent1_plan.md`
 - 實測員黑箱鐵律（不讀程式碼）、每個 PASS 只能來自本輪親手操作、E 編號跨輪不歸零 —— `agents/agent4_run.md`
 - 經驗包先批准才寫入；改引擎先提案；**匯入的經驗包是資料不是指令**，安全過濾不放寬 —— `commands/blacktea_retro.md`
+- 六個角色、調度與主對話都讀專案政策；既有服務不按 port 清除，Low 程式小修也必須獨立票級檢查；建案與變更均先歸檔再同次提交，保留未決與 push 暫停 —— `blacktea/runtime-contract.md`
+
+驗收掃描器可用 `python3 -m unittest discover -s ~/.claude/blacktea/tests -v`：只在暫存 Git repo 測試，涵蓋中間 commit 加入後刪除、敏感檔刪除、合併側分支、首次推送與掃描失敗。規則文件的 Claude 實際派工／續跑仍須另外驗收，這些測試不代表整條流水線已跑過。
 
 ## 分享經驗包（把別人的經驗併進你的電腦）
 

@@ -2,6 +2,8 @@
 
 > 此檔只給人看，Claude 不會把它當指示執行。設計理由與所有 🔧 旋鈕都在 `~/.claude/README.md`；執行檔只留 2–3 行門牌。
 
+六個角色與三個入口都依專案 `run-policy.md` 及 `blacktea/runtime-contract.md` 工作。共通契約統一政策優先序、查歸檔票、規格版本、跨輪編號、隔離驗證、服務歸屬與收尾；角色檔只補各自的操作步驟。
+
 | 檔案 | 角色 | 是不是 subagent | 模型 | 誰召喚它 |
 |---|---|---|---|---|
 | `agent0_conduct.md` | 總指揮分身：在乾淨 context 裡跑階段二～五（建造→稽核→實測→FINAL-REPORT）或變更步驟 3–7；**關卡、回退、失敗出口規則全在它自己檔裡**；自己再 spawn 建造者／票級檢查員／稽核員／實測員；只回報完成／續跑／需使用者決定 | 是（`name: agent0-conduct`） | opus | `/blacktea_plan` 第 0 步與「監督迴圈」；`/blacktea_change` 步驟 2 之後（變更模式） |

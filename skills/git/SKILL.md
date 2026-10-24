@@ -74,22 +74,12 @@ description: 任何牽涉 git／GitHub 的動作都要先讀本檔。三種時�
 
 ## push 前的敏感檔檢查（規則 1、2 共用）
 
-推之前一定要跑，結果講給使用者聽：
+1. 核對已授權的 remote／分支，用 `git status`、待推 log 與 diff stat 確認提交範圍；有 origin 時先 fetch 更新目的分支基準，不能假定舊 tracking ref 就是遠端現況。fetch／基準核對失敗＝掃描未完成，push 延後，不能省略或改拿 HEAD 當基準。
+2. 在該 repo 執行 `python3 ~/.claude/blacktea/scan-push.py --base origin/<已核對分支>`。**首次推到已確認為空的遠端**才省略 `--base`（掃全部可達歷史）；找不到既有遠端 ref 不能假裝遠端是空的。
+3. helper 逐一掃所有待推 commit 的完整檔案樹（包含合併進來的側分支），檢查敏感檔名、常見 token 與疑似憑證賦值；同 blob 去重。中間 commit 加入後又刪掉的內容仍會命中，不能只看兩端 diff。這是候選掃描，不保證辨識所有機密；可疑內容仍依授權政策處理，不放寬命中。
+4. 退出碼 **0＝本次規則未命中、1＝有候選、2＝掃描未完成**；1／2 都不 push。helper 缺失、超大 blob、巢狀 repo 或 Git 出錯均不當乾淨。輸出只含 commit／路徑／規則，不貼機密原值。需要重現可跑 `python3 -m unittest discover -s ~/.claude/blacktea/tests -v`（只建立暫存測試 repo）。
 
-```bash
-# 1. 看清楚到底會推什麼上去
-git status
-git log --oneline origin/<branch>..HEAD     # 尚未推送的 commit
-git diff --stat origin/<branch>..HEAD       # 動到哪些檔案
-
-# 2. 檢查追蹤中的檔案有沒有機密
-git ls-files | grep -iE 'credential|token|secret|\.env|\.pem|id_rsa|hosts\.yml|\.key$'
-
-# 3. 檢查 commit 內容有沒有夾帶金鑰字串
-git diff origin/<branch>..HEAD | grep -iE 'api[_-]?key|secret|password|ghp_|sk-[a-zA-Z0-9]{20}'
-```
-
-**任何一項有命中 → 停下來，先講給使用者聽，不要推。**（流水線內：不推、不問、繼續、結案回報——見上。）
+任何候選或掃描未完成 → 非流水線先回報；流水線不推、不問、本機照常 commit，記 state 的 push 暫停／延後與基準，結案回報。後續票、單 commit 與最後補推都必須遵守同一暫停狀態，只有使用者明確處理後才能解除；刪掉最新版本的機密不會清除待推歷史。
 
 `.gitignore` 建議用白名單寫法（先 `*` 全忽略，再逐一放行），比黑名單安全——漏寫黑名單會外洩，漏寫白名單只是少備份一個檔案。`~/.claude` 的 .gitignore 就是這種寫法，可參考。
 

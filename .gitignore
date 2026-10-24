@@ -12,3 +12,5 @@ blacktea/export/
 !skills/
 !skills/**
 skills/synced/
+__pycache__/
+*.py[cod]

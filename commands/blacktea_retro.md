@@ -21,13 +21,17 @@ disable-model-invocation: true
 
 # 執行流程（復盤本案，照順序做）
 
-## Step 1：讀取本案全部工件
+## Step 1：確定增量範圍、按線索讀工件
 
-讀專案的 `.pipeline/`：`state.md`（跑了幾階段幾輪）、`plan/01-requirements.md` 與 `02-workplan.md`（含 T-Rev 需求變更痕跡）；**每個輪資料夾 `rounds/<NN>/` 都要翻**（`01`＝首次建造、`02-T-Rev01`…＝各次變更；舊專案沒有 `rounds/` 就讀頂層），裡面的 `03-build-log.md`（索引：票狀態、票級檢查結果、BLOCKED／FAILED、修復輪次）與 `build-log/*.md`（各票的偏離事項、反證紀錄）、`ticket-checks/*.md`（票級檢查員的紀錄：哪些票第一次沒過、為什麼）、`04-verify-report.md`（發現清單、closed／withdrawn／open、環境問題）、`05-e2e-report.md`（FAIL 與覆蓋）、`evidence/`、`waivers.md`、`output/FINAL-REPORT.md` 與 `output/reports/*.md`（各輪報告）。另讀現有的 `~/.claude/blacktea/lessons.md`（比對用）。各角色是誰、住在哪個檔，見 `~/.claude/agents/README.md`。
+1. 先讀 `state.md`、專案 `run-policy.md` 與共通執行契約的政策／查票段；取 state 的「上次復盤」「復盤工件指紋」。列出輪資料夾，預設只復盤**上次復盤之後已完成的輪次**；目前仍在施工的輪不標已復盤。同一最後輪的工件指紋變了就把該輪重新納入，不能因輪名相同跳過新增證據。檢查點指到不存在輪次時回報不一致，不能自行跳到最新。
+2. **首次沒有檢查點**：全部已完成輪次都尚未確認復盤；先只讀各輪 03 索引與 `output/reports/<輪名>-report.md` 摘要，再針對異常展開，不逐份全文讀所有 build-log／evidence。使用者指定只復盤某段時明示範圍與未覆蓋輪次；只有從既有檢查點連續覆蓋完才推進「上次復盤」，不能把跳過的舊輪假記成已讀。明確要求全案才擴大既有範圍。
+3. 本次範圍先讀 03、04／05 的最新章與發現總帳、對應各輪報告；只有 FAIL、重做、偏離、反證、環境事故等相關票才展開 `build-log/`、`ticket-checks/` 與所引用的 evidence。無 04／05 的小修輪如實記未產生報告，不當漏檔失敗或編造數字；舊案沒有 rounds 才讀頂層。
+4. 01／02 只讀相關現行章節。需求變更歷史先 grep `plan/archive/INDEX.md` 的票號／功能／檔名／Dnn，再讀相關票與 `archive/01-history.md` 對應決策；尚未歸檔才讀 01／02 原處。`archive/02-workplan-other.md` 按需查詢，不全文讀 archive 或 state-history。
+5. 讀 waivers、FINAL-REPORT 的現行總覽與現有全域 lessons 作比對，不把全部舊分檔、截圖、log 再載入。角色位置見 `~/.claude/agents/README.md`。
 
 ## Step 2：統計事實（先數字、後判斷）
 
-整理一張小表：訪談幾輪、有沒有需求變更（T-Rev）、建造 BLOCKED 幾張／原因、票級檢查 FAIL 幾次／哪些票被退回重做、稽核幾輪／發現數／誤報撤回數、實測幾輪／FAIL 數、waiver 幾條、環境問題幾件。**數字是教訓的證據基礎，不准跳過這步直接寫感想。**
+整理本次範圍的小表：涵蓋輪次、需求變更、BLOCKED、票級 FAIL／重做、稽核執行與計入額度次數、新發現／撤回、實測／FAIL、waiver 與環境問題。數字以指令及對應工件核對；缺資料記 unknown，不把沿用的歷史累積當本次新增，不重複計算跨輪沿用發現。
 
 ## Step 3：歸納教訓候選（每條都要能回答「下次哪個角色在哪一步要做什麼不一樣」）
 
@@ -74,6 +78,10 @@ disable-model-invocation: true
 - 每個段落**上限 15 條**；超過必須先濃縮（Step 4 已提案）。
 - 只動批准的條目，其他內容原樣保留；不建副本、不另開新檔。
 - 寫完向使用者確認最終版位置與本次變更摘要，並在 `~/.claude` 執行 git commit（經驗包的每次演化都有紀錄），然後照下方「推上 GitHub（每次 commit 之後）」節問使用者要不要 push。
+
+## Step 7：完成後才記復盤檢查點
+
+提案已處理、批准的寫入成功後（含零教訓或使用者否決全部候選），才更新 state 的 `上次復盤: <連續覆蓋的最後輪名>` 與 `復盤工件指紋: <該輪 Markdown 工件＋對應各輪報告的排序路徑／內容 SHA256>`。指定的非連續範圍另記本次已讀清單，不推進跨越缺口的檢查點。寫入失敗、中斷、待批准都不推進；匯入／匯出／移除來源不改專案復盤檢查點。更新只動這些欄位，保留現行狀態、未決與 push 暫停；不把 state-history 帶入 commit。
 
 ## 例外：引擎修改提案（門檻高，走另一條路）
 
