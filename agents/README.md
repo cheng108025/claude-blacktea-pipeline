@@ -64,7 +64,8 @@ subagent 沒有 `AskUserQuestion` 工具——被召喚出去的分身中途不�
 | 資料夾放哪、放什麼；專案腳印 | `agents/agent1_plan.md` | Phase 0「建立資料夾與專案腳印」 |
 | Git 政策怎麼問 | `agents/agent1_plan.md` | Phase 0「Git 版控政策」 |
 | 無人值守時各種「做不下去」的預設動作 | `agents/agent1_plan.md` | Phase E「2.5 無人值守政策」 |
-| HTML 檢視版的樣式與內容 | `agents/agent1_plan.md` | Phase E「產出 HTML 檢視版」 |
+| 規格書要先讓使用者點頭才進拆票（兩階段確認） | `agents/agent1_plan.md` | Phase C「規格書確認」 |
+| HTML 檢視版的樣式與內容（單一檔案、日／夜切換、缺口總覽） | `agents/agent1_plan.md` | Phase C「規格書確認」／Phase E「產出 HTML 檢視版」的「HTML 的要求」 |
 | 每輪問幾題、題目能不能綁同一輪、最多幾輪 | `skills/agent1-interview/SKILL.md` | 「訪談規則」第 1 條／第 2 條／最後一條 |
 | 門檻分數、評分表面向、哪些必滿分 ★ | `skills/agent1-interview/SKILL.md` | 「門檻」、「評分表」 |
 | 問題要問得多詳細 | `skills/agent1-interview/SKILL.md` | 「每一題的標準構成」 |
