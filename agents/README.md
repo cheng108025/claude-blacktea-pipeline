@@ -93,7 +93,7 @@ subagent 沒有 `AskUserQuestion` 工具——被召喚出去的分身中途不�
 | 建造者的編碼守則（資安／可維護／前端／測試先行）、健康檢查等多久、server 配方 | `agents/agent2_build.md` | 「編碼守則」、「Linux 指令慣例」 |
 | build-log 分檔要記什麼 | `agents/agent2_build.md` | 「附錄」 |
 | 票級檢查用哪顆模型、紀錄每段字數 | `agents/agent3_ticket_check.md` | frontmatter、「寫紀錄」 |
-| 票級檢查要不要加 Codex 交叉驗證（每票多呼叫一次 `codex exec`） | 開工前問使用者，存 `.pipeline/plan/run-policy.md`「票級 Codex 驗證」；問法 `agents/agent1_plan.md` 2.5；派工 `skills/blacktea-dispatch/SKILL.md` ⑤-2；做法 `agents/agent3_ticket_check.md` 步驟 8 | 欄位 開／關 |
+| 票級檢查要不要加 Codex 交叉驗證（每票多呼叫一次 `codex exec`） | 預設「開」，存 `.pipeline/plan/run-policy.md`「票級 Codex 驗證」（缺欄視同開並補寫；只有使用者明確要求才寫「關」）；告知 `agents/agent1_plan.md` 2.5；派工 `skills/blacktea-dispatch/SKILL.md` ⑤-2；模型 gpt-5.6-sol／medium、失敗四態、逾時 `agents/agent3_ticket_check.md` 步驟 8 | 欄位 開／關；改模型／強度改步驟 8 的 `-m`／`-c` |
 | 票級檢查要不要順帶品質檢查 | `skills/blacktea-dispatch/SKILL.md` | ⑤-2（在指示末尾加「順帶品質檢查」） |
 | **稽核** | | |
 | 稽核員用哪顆模型 | `agents/agent3_review.md` | frontmatter `model` |

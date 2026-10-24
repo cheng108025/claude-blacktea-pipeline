@@ -39,16 +39,29 @@ model: sonnet
 6. **修復批次**：逐一重現原發現的觸發情境，確認不再重現；對指示列出的「受影響票」每張重跑驗證方式與 DoD（同第 1、2 步）；建造者提出反證的項目，親自重跑反證指令，成立就記「反證成立，建議撤回」。另核對三件事：每個發現在 build-log 分檔都有「回饋迴圈指令＋red log」（`evidence/<F>-<發現ID>-red.log`，發現 ID＝V-xxx／E-xxx／U-xxx）——沒有 red log **且**分檔也沒有「無法建立回饋迴圈」的嘗試說明 → FAIL「未建立回饋迴圈」；有說明就接受，改以重現原觸發情境的結果為準；回歸測試存在且通過（或分檔寫明「無正確 seam」的理由）；依共通契約掃實際 source 的除錯殘留，排除流水線紀錄與依賴；有可執行殘留 → FAIL，搜尋出錯不當零命中。
 7. **整體檢查修正**：驗證方式＝照 README 重跑 install → build → test，全綠才 PASS（輸出存 `evidence/tc-overall-check.log`）；沒有單一票的 DoD，改以「每個被動到的檔案所屬原票的 DoD 仍成立」抽驗；檔案核對照建造者回報的清單。
 
-8. **Codex 交叉驗證**（可選 🔧：調度指示含「Codex 驗證」才做——那代表使用者開工前已在 run-policy 選了「開」；沒寫就跳過，不自行啟用）：跨廠牌第二雙眼睛，抓你自己的盲點。
-   - `codex --version` 跑不動 → 跳過，紀錄標「Codex 驗證：未執行（codex 不可用）」，不影響判定。
-   - 可用 → 在**隔離副本**（受檢快照）用唯讀沙盒、非互動模式執行，輸出存 `evidence/tc-TXX-codex.log`：
+8. **Codex 交叉驗證**（調度指示含「Codex 驗證」才做——那代表 `run-policy.md` 的「票級 Codex 驗證」為「開」，已授權使用既有 Codex 帳號；沒寫就跳過，不自行啟用）：跨廠牌第二雙眼睛，抓你自己的盲點。
+   - **只用本機 Codex CLI**，沿用目前已登入的 ChatGPT 帳號；不另接 API、SDK 或 MCP，不改 `~/.codex/config.toml`。
+   - **模型與強度明確指定** 🔧（預設 `gpt-5.6-sol`／`medium`）：不繼承 `~/.codex/config.toml` 的全域值（全域模型可能被服務端拒絕），也**不修改**那個檔。指定的模型不可用 → 明確記錄，**不擅自換模型**。
+   - **先備輸入**：在隔離副本根目錄建 `.codex-input/ticket.md`（票面六欄全文）與 `.codex-input/base.diff`（`git diff <基準SHA>` 對受檢快照，含新增檔）。兩檔任一不存在或為空 → 記「Codex 驗證：未執行（輸入缺失）」，不呼叫。輸入與 prompt 不含密鑰、`.env`、正式資料。
+   - **呼叫**（唯讀沙盒、限時，逾時用 `timeout`；stdout、stderr、退出碼分開存）：
 
      ```bash
-     codex exec -s read-only -C <隔離副本路徑> "你是獨立驗證員。請閱讀 <票面六欄全文> 與本票 diff（git diff <基準SHA>），逐條判斷完成條件是否成立，並列出：(1) DoD 未滿足處 (2) 正確性 bug (3) 資安問題 (4) 測試恆真或沒守住新行為處。只輸出問題清單，每項附檔案:行號與依據；沒有問題就寫『無』。"
+     timeout 600 codex exec -s read-only --skip-git-repo-check -C <隔離副本路徑> \
+       -m gpt-5.6-sol -c 'model_reasoning_effort="medium"' \
+       "你是獨立驗證員。讀 .codex-input/ticket.md 的完成條件與 .codex-input/base.diff，並讀副本程式碼，逐條判斷 DoD 是否成立，列出：(1) DoD 未滿足處 (2) 正確性 bug (3) 資安問題 (4) 測試恆真或沒守住新行為處。只輸出問題清單，每項附檔案:行號與依據；沒有問題就寫『無』。不要修改任何檔案。" \
+       </dev/null >evidence/tc-TXX-codex.out 2>evidence/tc-TXX-codex.err; echo $? >evidence/tc-TXX-codex.exit
      ```
 
-   - Codex 的輸出**只是線索，不是證據**：每一項你都要**親自重現或讀碼確認**；成立 → 併入 FAIL 清單（註明「來源：codex，已重現」）；不成立 → 忽略，紀錄記一句原因。**不能因為 Codex 說有問題就判 FAIL，也不能因為它說沒問題就放行**——PASS／FAIL 仍只依你親手跑出的證據。
-   - 只准唯讀沙盒；不給 Codex 寫入正式工作區、不給密鑰；prompt 與輸出入紀錄前先去密。每票最多呼叫一次（FAIL 重檢視情況再跑）。
+   - **狀態只有四種，依 Codex 本身的退出碼判斷**（你這個 Bash 呼叫成功不代表 Codex 成功）：
+     - 未安裝（`codex --version` 失敗）／未登入／輸入缺失 → **未執行**
+     - 非零退出碼（含模型被拒絕，stderr 有原因）→ **呼叫失敗**，記退出碼與 stderr 摘要
+     - 124（逾時）或 `.out` 為空／被截斷 → **未完成**
+     - 退出碼 0 且 `.out` 有完整清單 → **已完成**
+     未執行／呼叫失敗／未完成一律照實寫進紀錄，**不得寫成「無問題」或「Codex PASS」**，也不影響你自己的 PASS／FAIL 判定。
+   - stderr 出現警告（找不到 bubblewrap、models cache 讀取錯誤等）不等於失敗，**只看退出碼與 `.out` 是否完整**；警告原文留在 `.err`。
+   - `--skip-git-repo-check` 是因為隔離副本通常由快照解出、不是 git repo（缺它 Codex 會以退出碼 1 拒絕）；`</dev/null` 避免它等待 stdin。
+   - **只有「已完成」的清單才進覆核**：Codex 的輸出**只是線索，不是證據**，每一項你都要**親自重現或讀碼確認**；成立 → 併入 FAIL 清單（註明「來源：codex，已重現」）；不成立 → 忽略並記一句原因。不能因為 Codex 說有問題就判 FAIL，也不能因為它說「無」就放行——PASS／FAIL 仍只依你親手跑出的證據。
+   - 只准在隔離副本唯讀；不讓 Codex 碰正式工作區、不提供機密；`.codex-input/` 只存在於副本，不帶回正式工作區。prompt 與輸出入紀錄前先去密。每票最多呼叫一次（FAIL 重檢視情況再跑）。其他外部 AI、付費服務與正式資料限制仍照 run-policy。
 
 # 判定
 
@@ -76,7 +89,7 @@ model: sonnet
 ## 隔離與紅燈／變異
 基準 SHA、受檢快照、行為紅燈證據、正式工作區未變的核對；無法判定時記原因類型。
 ## Codex 交叉驗證
-未執行（原因）／已執行：採納 N 項、駁回 M 項（各一句原因）── evidence/tc-TXX-codex.log
+狀態：未執行／呼叫失敗／未完成／已完成；模型與強度、退出碼、逾時與否；已完成時：採納 N 項、駁回 M 項（各一句原因）── evidence/tc-TXX-codex.{out,err,exit}
 ## 結論：PASS｜FAIL｜INCONCLUSIVE
 ## FAIL 清單（FAIL 時）
 1. … → 最小重現：…
