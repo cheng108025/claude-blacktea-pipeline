@@ -76,7 +76,11 @@ subagent 沒有 `AskUserQuestion` 工具——被召喚出去的分身中途不�
 | 視覺定調問哪四題、三種風格原型、預設 | `skills/agent1-interview/SKILL.md` | 「訪談規則」→ 必問題——視覺定調 |
 | 設計系統章要有哪幾段（token、狀態矩陣、元件清單） | `skills/agent1-spec/SKILL.md` | 「章節菜單」10 |
 | 設計系統基座票做什麼、UI 票三條硬規定 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」2b、「每張 ticket 的品質要求」 |
-| UI 原型怎麼做、放哪 | `agents/agent1_plan.md` | Phase E「產出 HTML 檢視版」 |
+| UI 原型怎麼做、放哪、固定結構與自驗 | `agents/agent1_plan.md` | Phase E「產出 HTML 檢視版」 |
+| HTML 產生器（規格書／工作單轉 HTML：票卡片、色塊、目錄、日夜切換） | `blacktea/md2html.py` | 以 `uv run` 執行；樣式改這支 |
+| 規格書／工作單／UI 原型的格式樣本 | `blacktea/templates/examples/` | 換樣本＝改訪談官產出的長相；內容不照抄 |
+| 規格書表格化（資料庫、介面契約）、視覺樣本、對比驗算、檔首缺口總覽 | `skills/agent1-spec/SKILL.md` | 「原則」、「章節菜單」5／7／10 |
+| 工作單固定章節（缺口總覽、使用說明、功能群對照、自我稽核結果）與腳本化自我稽核 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」1b／5、「自我稽核」 |
 | 規格書要有哪些章、技術棧表；哪些章不可省 | `skills/agent1-spec/SKILL.md` | 「章節菜單」、「八個必備章」 |
 | ticket 要拆多小、六欄長怎樣 | `skills/agent1-tickets/SKILL.md` | 「每張 ticket 的品質要求」、「Ticket 格式」 |
 | T01 做什麼、.gitignore 擋什麼 | `skills/agent1-tickets/SKILL.md` | 「工作單的組成」第 2 條 |
