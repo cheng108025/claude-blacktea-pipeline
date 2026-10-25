@@ -134,9 +134,20 @@ Read `~/.claude/skills/agent1-spec/SKILL.md` 照做，寫出 `01-requirements.md
   - 依「設計系統」章的 token 與版面骨架，把「頁面清單」的**每一頁**做成靜態原型（純 HTML＋內嵌 CSS，假資料；不需要互動邏輯），每頁一個區段，區段標題＝頁面名；主要頁面另附**空資料**與**錯誤**兩個狀態的小版本。
   - 要像最終產品（用真實文案、合理的假資料、正確的元件樣式），不是線框圖；CJK 名稱要用真實長度測試不折行。
   - 頂端放「這是外觀契約：建造者會照這份做；想改外觀請在定稿前說」一句。
+  - **固定結構**（照 `~/.claude/blacktea/templates/examples/ui-prototype-example.html`）：外觀契約橫幅 → 可點目錄 → 每頁（含同頁的主要狀態，例：初次載入、有資料、寫入結果、各種檢視、對話框）各一個「瀏覽器框」（框內含本產品的頂欄與導覽、頁面內容以規格書版面骨架的寬度置中）→ 每頁的空資料／錯誤／停用狀態用並排的小框格（每格一行標題說明是哪個狀態）。CSS 只用規格書 token（亮暗兩套變數），手動日夜切換照下方 HTML 規則。
+  - **產出後自己驗**：用瀏覽器開（本機檔案不能直開時以臨時 `python3 -m http.server` 供應，驗完關掉並確認 port 釋放）→ 1280×800 量 `document.documentElement.scrollWidth ≤ clientWidth` 且每個框沒有橫向溢出 → 亮、暗各截幾張主要頁面親自看圖（字有沒有被切、彩色底上的字讀不讀得清楚、格線對不對齊）→ 有問題改完再給使用者看。彩色底（日曆色、標籤色）上的字取白字與深色字中對比較高者。
   - UI 票的 DoD 引用它（「與原型對應區段對照」）；實測員的視覺檢查也拿它當基準。
 
 （專案名字取規格書「專案概述」章的專案名稱，空白改成底線——跟「規格書確認」那一步用同一個名字。）
+
+**requirements 與 workplan 一律用產生器產出**（不手寫 HTML、不臨時另寫轉換器）——它已實作下面的目錄、DRAFT 橫幅、缺口總覽黃框、重點區塊藍框、工作單票卡片、色碼旁色塊、日夜切換：
+
+```bash
+uv run ~/.claude/blacktea/md2html.py --kind requirements .pipeline/plan/01-requirements.md ".pipeline/output/{專案名字}_requirements.html" --project "{專案名字}"
+uv run ~/.claude/blacktea/md2html.py --kind workplan     .pipeline/plan/02-workplan.md     ".pipeline/output/{專案名字}_workplan.html"     --project "{專案名字}"
+```
+
+產出後核對它印出的 `tickets=` 等於工作單票數、`draft=` 與檔首狀態相符。UI 原型是手寫 HTML（不經產生器），完成後 `cp .pipeline/plan/ui-prototype.html .pipeline/output/{專案名字}_ui-prototype.html`。三份文件的格式樣本在 `~/.claude/blacktea/templates/examples/`。
 
 HTML 的要求（以下規則適用全部三個檔案，不管是「規格書確認」那一步產出的 requirements，還是本節產出的 workplan／ui-prototype）：
 

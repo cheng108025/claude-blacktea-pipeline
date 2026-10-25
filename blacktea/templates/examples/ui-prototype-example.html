@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="zh-Hant" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+try { var t = localStorage.getItem("AI_祕書-report-theme"); if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+</script>
+<title>AI 祕書 UI 原型</title>
+<style>
+:root, [data-theme="light"] {
+  --bg:#ffffff; --surface:#f7f7f5; --surface-hover:#efefed; --border:#e9e9e7;
+  --text:#37352f; --text-secondary:#6b6a66; --primary:#2563eb; --primary-hover:#1d4ed8; --primary-fg:#ffffff;
+  --link:#2563eb; --success:#15803d; --success-bg:#dcfce7; --warning:#b45309; --warning-bg:#fef3c7;
+  --danger:#b91c1c; --danger-bg:#fee2e2; --danger-solid:#b91c1c;
+  --focus-ring:0 0 0 3px rgba(37,99,235,.35); --shadow-sm:0 1px 2px rgba(0,0,0,.06); --shadow-md:0 4px 16px rgba(0,0,0,.10);
+  --event-dark-text:#1f1f1f; --page:#f1f1ef;
+}
+[data-theme="dark"] {
+  --bg:#191919; --surface:#202020; --surface-hover:#2a2a2a; --border:#2f2f2f;
+  --text:#e6e6e5; --text-secondary:#9b9a97; --primary:#2563eb; --primary-hover:#1d4ed8; --primary-fg:#ffffff;
+  --link:#60a5fa; --success:#22c55e; --success-bg:#12301d; --warning:#f59e0b; --warning-bg:#3a2e0b;
+  --danger:#f87171; --danger-bg:#3b1515; --danger-solid:#dc2626;
+  --focus-ring:0 0 0 3px rgba(96,165,250,.5); --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 4px 16px rgba(0,0,0,.4);
+  --page:#111111;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--page); color:var(--text); font:15px/1.6 system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif; }
+.num { font-variant-numeric:tabular-nums; }
+a { color:var(--link); text-decoration:none; }
+.doc { max-width:1340px; margin:0 auto; padding:24px 16px 80px; }
+.contract { background:var(--warning-bg); color:var(--warning); border-radius:8px; padding:12px 16px; font-weight:600; margin-bottom:16px; }
+.toc { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 20px; margin-bottom:24px; }
+.toc ul { margin:6px 0 0; padding-left:20px; columns:2; }
+.theme-btn { position:fixed; top:12px; right:12px; z-index:50; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:999px; padding:6px 14px; font:inherit; cursor:pointer; box-shadow:var(--shadow-sm); }
+h2.sec { font-size:22px; margin:40px 0 4px; }
+p.note { color:var(--text-secondary); margin:0 0 12px; font-size:14px; }
+.frame { background:var(--bg); border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:var(--shadow-md); margin-bottom:12px; }
+.small-frames { display:grid; grid-template-columns:repeat(auto-fit,minmax(380px,1fr)); gap:12px; }
+.small-frames .frame .body { min-height:0; }
+.cap { font-size:12px; color:var(--text-secondary); padding:6px 12px; border-bottom:1px solid var(--border); background:var(--surface); }
+/* top bar */
+.topbar { height:56px; display:flex; align-items:center; gap:24px; padding:0 24px; border-bottom:1px solid var(--border); }
+.brand { font-weight:700; font-size:16px; white-space:nowrap; }
+.nav { display:flex; gap:4px; }
+.nav span { padding:6px 12px; border-radius:6px; color:var(--text-secondary); font-size:14px; white-space:nowrap; }
+.nav span.on { background:var(--surface-hover); color:var(--text); font-weight:600; }
+.topbar .right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.ghost-pill { border:1px solid var(--border); border-radius:999px; padding:3px 12px; font-size:13px; white-space:nowrap; }
+.body { padding:32px 24px; }
+.col760 { max-width:760px; margin:0 auto; }
+.col960 { max-width:960px; margin:0 auto; }
+h1.pt { font-size:22px; margin:0 0 20px; }
+/* controls */
+.btn { display:inline-flex; align-items:center; gap:6px; border:1px solid transparent; border-radius:6px; padding:7px 14px; font:inherit; font-size:14px; white-space:nowrap; cursor:default; }
+.btn.pr { background:var(--primary); color:var(--primary-fg); }
+.btn.se { background:var(--bg); color:var(--text); border-color:var(--border); }
+.btn.gh { background:transparent; color:var(--text); }
+.btn.da { background:var(--danger-solid); color:#fff; }
+.btn.dg { background:transparent; color:var(--danger); }
+.btn.di { background:var(--surface-hover); color:var(--text-secondary); }
+.btn.sm { padding:4px 10px; font-size:13px; }
+.field { border:1px solid var(--border); border-radius:6px; padding:6px 10px; background:var(--bg); color:var(--text); font-size:14px; min-height:34px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.field.err { border-color:var(--danger); }
+.field.ph { color:var(--text-secondary); }
+.field.ro { background:var(--surface); color:var(--text-secondary); }
+.sel::after { content:"▾"; margin-left:auto; padding-left:8px; color:var(--text-secondary); }
+.errtxt { color:var(--danger); font-size:12px; }
+.bd { display:inline-block; border-radius:999px; padding:1px 10px; font-size:12px; border:1px solid var(--border); color:var(--text-secondary); white-space:nowrap; }
+.bd.ok { background:var(--success-bg); color:var(--success); border-color:transparent; }
+.bd.w { background:var(--warning-bg); color:var(--warning); border-color:transparent; }
+.bd.d { background:var(--danger-bg); color:var(--danger); border-color:transparent; }
+.bd.ai { color:var(--link); border-color:var(--link); }
+.msg { background:var(--danger-bg); color:var(--danger); border-radius:6px; padding:10px 12px; font-size:14px; display:flex; align-items:center; gap:12px; }
+.warnbar { background:var(--warning-bg); color:var(--warning); border-radius:6px; padding:8px 12px; font-size:14px; }
+.spin { width:14px; height:14px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; display:inline-block; }
+.toast { position:absolute; right:20px; bottom:20px; background:var(--text); color:var(--bg); border-radius:8px; padding:10px 16px; font-size:14px; box-shadow:var(--shadow-md); }
+.rel { position:relative; }
+.muted { color:var(--text-secondary); }
+.trunc { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* input card */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:8px; }
+.inputcard { padding:16px; }
+.textarea { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:10px 12px; min-height:150px; font-size:15px; }
+.textarea.ph { color:var(--text-secondary); }
+.inrow { display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap; }
+.drop { flex:1; min-width:240px; border:1px dashed var(--border); border-radius:6px; padding:8px 12px; font-size:13px; color:var(--text-secondary); }
+.thumb { display:inline-flex; align-items:center; gap:8px; }
+.thumb i { width:40px; height:40px; border-radius:6px; background:linear-gradient(135deg,#7c3aed,#2563eb); display:inline-block; }
+.hint { font-size:12px; color:var(--text-secondary); margin-top:6px; text-align:right; }
+/* preview */
+.pvhead { display:flex; align-items:center; justify-content:space-between; margin:28px 0 12px; gap:12px; }
+.pvhead h3 { margin:0; font-size:18px; }
+.ev { background:var(--surface); border:1px solid var(--border); border-left:4px solid #4285f4; border-radius:8px; padding:14px 16px; margin-bottom:12px; }
+.ev.done { border-left-color:var(--success); }
+.ev .head { display:flex; align-items:center; gap:10px; }
+.chk { width:16px; height:16px; border:1.5px solid var(--text-secondary); border-radius:4px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; flex:none; }
+.chk.on { background:var(--primary); border-color:var(--primary); color:#fff; }
+.ev .title { font-size:18px; font-weight:600; flex:1; border-bottom:1px dashed transparent; }
+.badges { display:flex; gap:6px; flex-wrap:wrap; margin:6px 0 4px 26px; }
+.rows { margin-left:26px; display:grid; gap:8px; margin-top:8px; }
+.row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:14px; }
+.row .ic { width:20px; text-align:center; }
+.result { margin:10px 0 0 26px; display:flex; gap:12px; align-items:center; font-size:14px; }
+.submitbar { position:sticky; bottom:0; display:flex; justify-content:flex-end; align-items:center; gap:12px; border-top:1px solid var(--border); padding:12px 0 0; margin-top:8px; background:var(--bg); }
+.empty { text-align:center; padding:36px 16px; color:var(--text-secondary); }
+.empty .big { font-size:28px; }
+.empty b { display:block; color:var(--text); font-size:16px; margin:6px 0 2px; }
+/* calendar */
+.cal { display:flex; min-height:640px; }
+.side { width:240px; flex:none; border-right:1px solid var(--border); padding:16px; background:var(--bg); }
+.mini { font-size:12px; margin:16px 0; }
+.mini .mh { font-weight:600; margin-bottom:6px; }
+.mini table { width:100%; border-collapse:collapse; text-align:center; }
+.mini td, .mini th { padding:3px 0; font-weight:400; color:var(--text-secondary); }
+.mini td.in { color:var(--text); }
+.mini td.today span { background:var(--primary); color:#fff; border-radius:50%; padding:2px 5px; }
+.callist div { display:flex; align-items:center; gap:8px; font-size:14px; padding:4px 0; }
+.dot { width:10px; height:10px; border-radius:3px; display:inline-block; flex:none; }
+.calmain { flex:1; display:flex; flex-direction:column; min-width:0; }
+.toolbar { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); }
+.toolbar .period { font-size:20px; font-weight:600; margin-left:6px; white-space:nowrap; }
+.tabs { margin-left:auto; display:flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.tabs span { padding:5px 14px; font-size:14px; color:var(--text-secondary); }
+.tabs span.on { background:var(--surface-hover); color:var(--text); font-weight:600; }
+.month { display:grid; grid-template-columns:repeat(7,1fr); flex:1; }
+.month .dh { font-size:12px; color:var(--text-secondary); text-align:center; padding:6px 0; border-bottom:1px solid var(--border); }
+.month .d { border-right:1px solid var(--border); border-bottom:1px solid var(--border); min-height:96px; padding:4px; min-width:0; }
+.month .d:nth-child(7n) { border-right:none; }
+.month .d .n { font-size:12px; text-align:center; margin-bottom:2px; }
+.month .d.out .n { color:var(--text-secondary); }
+.month .d .n.today span { background:var(--primary); color:#fff; border-radius:50%; padding:2px 6px; }
+.ch { display:block; border-radius:4px; padding:0 6px; font-size:12px; color:#fff; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ch.allday { font-weight:600; }
+.ch.dk, .ch[style*="#4285f4"], .blk[style*="#4285f4"], .ch[style*="#7986cb"] { color:var(--event-dark-text); }
+.more { font-size:12px; color:var(--text-secondary); padding-left:6px; }
+.week { display:flex; flex-direction:column; flex:1; min-width:0; }
+.wkhead { display:grid; grid-template-columns:56px repeat(7,1fr); border-bottom:1px solid var(--border); }
+.wkhead div { text-align:center; font-size:12px; color:var(--text-secondary); padding:6px 0; }
+.wkhead div b { display:block; font-size:18px; color:var(--text); font-weight:500; }
+.wkall { display:grid; grid-template-columns:56px repeat(7,1fr); border-bottom:1px solid var(--border); min-height:28px; font-size:11px; color:var(--text-secondary); }
+.wkall div { padding:3px; border-left:1px solid var(--border); }
+.wkall div:first-child { border-left:none; text-align:right; padding-right:6px; }
+.wkgrid { display:grid; grid-template-columns:56px repeat(7,1fr); height:480px; overflow:hidden; position:relative; }
+.wkgrid .times div { height:48px; font-size:11px; color:var(--text-secondary); text-align:right; padding-right:6px; transform:translateY(-7px); }
+.wkgrid .times div:first-child { transform:none; }
+.wkcol { position:relative; border-left:1px solid var(--border); background-image:linear-gradient(var(--border) 1px, transparent 1px); background-size:100% 48px; }
+.wkcol.today { background-color:var(--surface); }
+.blk { position:absolute; left:3px; right:3px; border-radius:4px; color:#fff; font-size:12px; padding:2px 6px; overflow:hidden; }
+.blk.half-l { right:50%; } .blk.half-r { left:50%; }
+.nowline { position:absolute; left:0; right:0; height:2px; background:var(--primary); }
+.agenda { padding:8px 24px; }
+.agenda .day { font-size:13px; color:var(--text-secondary); margin:16px 0 6px; font-weight:600; }
+.agenda .it { display:grid; grid-template-columns:110px 16px 1fr 200px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:14px; }
+/* dialogs */
+.overlay { background:rgba(0,0,0,.35); padding:40px 24px; display:flex; justify-content:center; gap:24px; flex-wrap:wrap; }
+.dialog { background:var(--bg); border-radius:8px; box-shadow:var(--shadow-md); width:480px; max-width:100%; overflow:hidden; }
+.dialog.wide { width:640px; }
+.dialog .bar { height:8px; }
+.dialog .in { padding:16px 20px; }
+.dialog h3 { margin:0 0 10px; font-size:20px; }
+.dialog .ln { display:flex; gap:10px; font-size:14px; padding:4px 0; }
+.dialog .foot { display:flex; justify-content:flex-end; gap:8px; padding:12px 20px; border-top:1px solid var(--border); }
+.dialog .foot .left { margin-right:auto; }
+/* history */
+.htable { width:100%; border-collapse:collapse; font-size:14px; table-layout:fixed; }
+.htable th { text-align:left; font-weight:500; color:var(--text-secondary); font-size:12px; padding:8px; border-bottom:1px solid var(--border); }
+.htable td { padding:10px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.syncline { display:flex; justify-content:space-between; font-size:12px; color:var(--text-secondary); margin-bottom:8px; }
+.pager { display:flex; justify-content:center; gap:12px; align-items:center; margin-top:16px; font-size:14px; }
+/* settings */
+.svc { padding:16px 20px; margin-bottom:12px; }
+.svc .h { display:flex; align-items:center; gap:10px; }
+.svc .h b { font-size:16px; }
+.svc .h .act { margin-left:auto; display:flex; gap:8px; }
+.svc p { margin:6px 0 0; font-size:14px; color:var(--text-secondary); }
+.panel { margin-top:12px; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:12px 14px; font-size:14px; display:grid; gap:10px; }
+.code { font-size:24px; font-weight:700; letter-spacing:.12em; }
+.mono { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:13px; background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:2px 8px; }
+@media (max-width:900px) { .toc ul { columns:1; } }
+</style>
+</head>
+<body>
+<button class="theme-btn" id="themeBtn" type="button"></button>
+<div class="doc">
+
+<div class="contract">這是外觀契約：建造者會照這份做；想改外觀請在定稿前說。（假資料；「今天」為 2026-10-25）</div>
+
+<nav class="toc"><strong>目錄</strong>
+<ul>
+<li><a href="#p1">新增行程：初次載入</a></li>
+<li><a href="#p2">新增行程：預覽（AI 解析後）</a></li>
+<li><a href="#p3">新增行程：寫入結果</a></li>
+<li><a href="#p4">新增行程：空資料與錯誤</a></li>
+<li><a href="#p5">日曆：月檢視</a></li>
+<li><a href="#p6">日曆：週檢視</a></li>
+<li><a href="#p7">日曆：清單檢視</a></li>
+<li><a href="#p8">日曆：詳情、唯讀、編輯、刪除確認</a></li>
+<li><a href="#p9">日曆：空資料與錯誤</a></li>
+<li><a href="#p10">歷史紀錄</a></li>
+<li><a href="#p11">歷史紀錄：空資料與錯誤</a></li>
+<li><a href="#p12">設定</a></li>
+<li><a href="#p13">設定：錯誤狀態</a></li>
+</ul>
+</nav>
+
+<!-- ============ 新增行程：初次載入 ============ -->
+<h2 class="sec" id="p1">新增行程：初次載入</h2>
+<p class="note">頁面 <code>/</code>。內容寬 760px 置中。「解析」在沒有輸入時停用。</p>
+<div class="frame">
+  <div class="topbar"><span class="brand">AI 祕書</span><div class="nav"><span class="on">新增行程</span><span>日曆</span><span>歷史紀錄</span><span>設定</span></div><div class="right"><span class="ghost-pill">🌙 夜晚</span></div></div>
+  <div class="body"><div class="col760">
+    <h1 class="pt">新增行程</h1>
+    <div class="card inputcard">
+      <div class="textarea ph">貼上文字或連結，例如：下週三晚上 7 點跟小王在信義區吃飯</div>
+      <div class="inrow">
+        <div class="drop">🖼 拖曳圖片到這裡、點此選檔，或直接 Ctrl+V 貼上</div>
+        <span class="btn se">✎ 手動新增</span>
+        <span class="field sel" style="width:130px">Claude</span>
+        <span class="btn di">解析</span>
+      </div>
+      <div class="hint num">0 / 20,000　·　請輸入文字、連結或圖片</div>
+    </div>
+  </div></div>
+</div>
+
+<!-- ============ 新增行程：預覽 ============ -->
+<h2 class="sec" id="p2">新增行程：預覽（AI 解析後）</h2>
+<p class="note">三張卡片示範：缺欄位（結束時間）＋撞期、可能已加過（預設未勾選）、重複行程＋AI 推測。底部按鈕因有缺欄位而停用。</p>
+<div class="frame">
+  <div class="topbar"><span class="brand">AI 祕書</span><div class="nav"><span class="on">新增行程</span><span>日曆</span><span>歷史紀錄</span><span>設定</span></div><div class="right"><span class="ghost-pill">🌙 夜晚</span></div></div>
+  <div class="body"><div class="col760">
+    <h1 class="pt">新增行程</h1>
+    <div class="card inputcard">
+      <div class="textarea">下週三晚上7點跟小王在信義區吃飯<br>每週三晚上七點瑜珈課到年底<br>11/8 家庭日</div>
+      <div class="inrow">
+        <div class="drop thumb"><i></i>海報.png　<a>移除</a></div>
+        <span class="btn se">✎ 手動新增</span>
+        <span class="field sel" style="width:130px">Claude</span>
+        <span class="btn pr">解析</span>
+      </div>
+    </div>
+
+    <div class="pvhead"><h3>找到 3 筆行程</h3><span class="row"><span class="muted">加入到</span><span class="field sel" style="width:180px"><span class="dot" style="background:#4285f4"></span>我的日曆</span></span></div>
+
+    <div class="ev">
+      <div class="head"><span class="chk on">✓</span><span class="title">跟小王吃飯</span></div>
+      <div class="badges"><span class="bd d">缺欄位</span><span class="bd w">撞期：部門聚餐 19:30–20:30</span></div>
+      <div class="rows">
+        <div class="row"><span class="ic">🕒</span><span class="field num">2026/11/04（三）</span><span class="field num">19:00</span>–<span class="field num">2026/11/04（三）</span><span><span class="field err ph">結束時間</span><div class="errtxt">請填寫</div></span><span class="row"><span class="chk"></span>全天</span></div>
+        <div class="row"><span class="ic">📍</span><span class="field" style="flex:1">信義區</span></div>
+        <div class="row"><span class="ic">🔁</span><span class="muted">不重複</span><a>編輯</a></div>
+        <div class="row"><span class="ic">🔔</span><span class="field sel" style="width:160px">日曆預設</span></div>
+        <div class="row"><span class="ic">📝</span><span class="field" style="flex:1;white-space:normal">朋友聚餐，地點在信義區。<br><span class="muted">來源：貼上的文字　（由 AI 祕書加入）</span></span></div>
+      </div>
+    </div>
+
+    <div class="ev" style="border-left-color:#4285f4">
+      <div class="head"><span class="chk"></span><span class="title">跟小王吃飯</span></div>
+      <div class="badges"><span class="bd w">可能已加過：跟小王吃飯（10/25 14:02 加入）</span><span class="bd w">日曆上已有相似行程：跟小王吃飯</span></div>
+      <div class="rows">
+        <div class="row"><span class="ic">🕒</span><span class="field num">2026/11/04（三）</span><span class="field num">19:00</span>–<span class="field num">2026/11/04（三）</span><span class="field num">21:00</span><span class="row"><span class="chk"></span>全天</span></div>
+        <div class="row"><span class="ic">📍</span><span class="field" style="flex:1">信義區</span></div>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div class="head"><span class="chk on">✓</span><span class="title">瑜珈課</span></div>
+      <div class="rows">
+        <div class="row"><span class="ic">🕒</span><span class="field num">2026/10/28（三）</span><span class="field num">19:00</span>–<span class="field num">2026/10/28（三）</span><span class="field num">20:00</span><span class="row"><span class="chk"></span>全天</span></div>
+        <div class="row"><span class="ic">🔁</span><b>每週三，到 2026/12/31（共 10 次）</b><a>編輯</a></div>
+        <div class="row" style="margin-left:28px;gap:6px"><span class="field sel" style="width:96px">每週</span><span class="muted">間隔</span><span class="field num" style="width:48px">1</span><span class="muted">週的</span><span class="bd">日</span><span class="bd">一</span><span class="bd">二</span><span class="bd ai">三</span><span class="bd">四</span><span class="bd">五</span><span class="bd">六</span></div>
+        <div class="row" style="margin-left:28px;gap:6px"><span class="muted">結束：</span><span class="chk"></span>不結束　<span class="chk on">✓</span>到 <span class="field num">2026/12/31</span>　<span class="chk"></span>共 <span class="field num" style="width:48px">—</span> 次</div>
+        <div class="row"><span class="ic">🔔</span><span class="field sel" style="width:160px">1 小時前</span></div>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div class="head"><span class="chk on">✓</span><span class="title">家庭日</span></div>
+      <div class="rows">
+        <div class="row"><span class="ic">🕒</span><span class="field num">2026/11/08（日）</span><span class="bd w">AI 推測</span><span class="row"><span class="chk on">✓</span>全天</span></div>
+      </div>
+    </div>
+
+    <div class="submitbar"><span class="errtxt" style="font-size:14px">有 1 筆勾選的行程還缺資料</span><span class="btn di">加入日曆（2 筆）</span></div>
+  </div></div>
+</div>
+
+<!-- ============ 新增行程：寫入結果 ============ -->
+<h2 class="sec" id="p3">新增行程：寫入結果</h2>
+<p class="note">逐筆結果：成功卡（綠色條＋已加入＋開啟連結）、失敗卡（紅色訊息＋重試）。</p>
+<div class="frame rel">
+  <div class="topbar"><span class="brand">AI 祕書</span><div class="nav"><span class="on">新增行程</span><span>日曆</span><span>歷史紀錄</span><span>設定</span></div><div class="right"><span class="ghost-pill">🌙 夜晚</span></div></div>
+  <div class="body"><div class="col760">
+    <div class="pvhead"><h3>找到 3 筆行程</h3><span class="row"><span class="muted">加入到</span><span class="field sel ro" style="width:180px"><span class="dot" style="background:#0b8043"></span>工作</span></span></div>
+    <div class="ev done"><div class="head"><span class="chk on">✓</span><span class="title">AI 講座 第1場</span><span class="bd ok">已加入</span></div><div class="result"><span class="num muted">2026/11/03（二）14:00–16:00</span><a>在 Google 日曆開啟 ↗</a></div></div>
+    <div class="ev" style="border-left-color:var(--danger)"><div class="head"><span class="chk on">✓</span><span class="title">AI 講座 第2場</span></div><div class="result"><span class="msg" style="flex:1">Google 日曆暫時無法使用：服務沒有回應</span><span class="btn se sm">重試</span></div></div>
+    <div class="ev done"><div class="head"><span class="chk on">✓</span><span class="title">AI 講座 第3場</span><span class="bd ok">已加入</span></div><div class="result"><span class="num muted">2026/11/17（二）14:00–16:00</span><a>在 Google 日曆開啟 ↗</a></div></div>
+    <div class="submitbar"><span class="muted" style="font-size:14px">已加入 2 筆，1 筆失敗</span><span class="btn se">再新增一筆</span></div>
+  </div></div>
+  <div class="toast">已加入 2 筆行程</div>
+</div>
+
+<!-- ============ 新增行程：空與錯誤 ============ -->
+<h2 class="sec" id="p4">新增行程：空資料與錯誤</h2>
+<div class="small-frames">
+  <div class="frame"><div class="cap">無行程</div><div class="body">
+    <div class="card inputcard"><div class="textarea">今天天氣很好</div></div>
+    <div class="empty"><div class="big">🗓</div><b>沒看到行程</b>內容沒有提到任何時間安排</div>
+  </div></div>
+  <div class="frame"><div class="cap">錯誤：連結需要登入</div><div class="body">
+    <div class="card inputcard"><div class="textarea">https://www.facebook.com/events/123</div></div>
+    <div style="margin-top:12px" class="msg"><span style="flex:1">這個頁面需要登入才看得到內容，請複製頁面上的文字貼上</span><span class="btn se sm">改貼文字</span></div>
+  </div></div>
+  <div class="frame"><div class="cap">AI 皆未登入</div><div class="body">
+    <div class="inrow" style="margin-top:0"><span class="field sel" style="width:170px">Claude（未登入）</span><span class="btn di">解析</span><span class="btn se">✎ 手動新增</span></div>
+    <p class="muted" style="font-size:14px">尚未登入任何 AI，請到 <a>設定</a> 登入</p>
+  </div></div>
+  <div class="frame"><div class="cap">解析中</div><div class="body">
+    <div class="inrow" style="margin-top:0"><span class="btn pr"><span class="spin"></span>解析中…</span><span class="muted" style="font-size:14px">AI 解析中…（最多 120 秒）</span></div>
+  </div></div>
+  <div class="frame"><div class="cap">Google 未連結</div><div class="body">
+    <div class="pvhead" style="margin-top:0"><h3>找到 1 筆行程</h3><span class="field sel ro" style="width:170px">未連結 Google</span></div>
+    <div class="submitbar"><span class="errtxt" style="font-size:14px">請先到 <a>設定</a> 連結 Google 日曆</span><span class="btn di">加入日曆（1 筆）</span></div>
+  </div></div>
+  <div class="frame"><div class="cap">錯誤：解析逾時</div><div class="body">
+    <div class="msg">解析逾時（超過 120 秒），可換另一個 AI 重試</div>
+  </div></div>
+</div>
+
+<!-- ============ 日曆：月 ============ -->
+<h2 class="sec" id="p5">日曆：月檢視</h2>
+<p class="note">頁面 <code>/calendar</code>。左側欄 240px；週日起始；每格最多 3 筆，超過顯示「還有 N 筆」；✦ 為 AI 祕書加入的行程；顏色＝所屬日曆色。</p>
+<div class="frame">
+  <div class="topbar"><span class="brand">AI 祕書</span><div class="nav"><span>新增行程</span><span class="on">日曆</span><span>歷史紀錄</span><span>設定</span></div><div class="right"><span class="ghost-pill">🌙 夜晚</span></div></div>
+  <div class="cal">
+    <div class="side">
+      <span class="btn pr" style="width:100%;justify-content:center">＋ 新增</span>
+      <div class="mini"><div class="mh">2026 年 11 月</div>
+        <table class="num"><tr><th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th></tr>
+        <tr><td class="in">1</td><td class="in">2</td><td class="in">3</td><td class="in">4</td><td class="in">5</td><td class="in">6</td><td class="in">7</td></tr>
+        <tr><td class="in">8</td><td class="in">9</td><td class="in">10</td><td class="in">11</td><td class="in">12</td><td class="in">13</td><td class="in">14</td></tr>
+        <tr><td class="in">15</td><td class="in">16</td><td class="in">17</td><td class="in">18</td><td class="in">19</td><td class="in">20</td><td class="in">21</td></tr>
+        <tr><td class="in">22</td><td class="in">23</td><td class="in">24</td><td class="in">25</td><td class="in">26</td><td class="in">27</td><td class="in">28</td></tr>
+        <tr><td class="in">29</td><td class="in">30</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr></table></div>
+      <div class="muted" style="font-size:12px;margin-bottom:6px">我的日曆</div>
+      <div class="callist">
+        <div><span class="chk on" style="background:#4285f4;border-color:#4285f4">✓</span><span class="trunc">我的日曆</span></div>
+        <div><span class="chk on" style="background:#0b8043;border-color:#0b8043">✓</span><span class="trunc">工作</span></div>
+        <div><span class="chk on" style="background:#7986cb;border-color:#7986cb">✓</span><span class="trunc">台灣節日</span><span class="bd" style="margin-left:auto">唯讀</span></div>
+      </div>
+    </div>
+    <div class="calmain">
+      <div class="toolbar"><span class="btn se sm">今天</span><span class="btn gh sm">‹</span><span class="btn gh sm">›</span><span class="period num">2026 年 11 月</span><div class="tabs"><span class="on">月</span><span>週</span><span>清單</span></div></div>
+      <div class="month num">
+        <div class="dh">日</div><div class="dh">一</div><div class="dh">二</div><div class="dh">三</div><div class="dh">四</div><div class="dh">五</div><div class="dh">六</div>
+        <div class="d"><div class="n">11/1</div></div>
+        <div class="d"><div class="n">2</div><span class="ch" style="background:#4285f4">10:00 週會</span></div>
+        <div class="d"><div class="n">3</div><span class="ch" style="background:#0b8043">✦ 14:00 AI 講座 第1場</span></div>
+        <div class="d"><div class="n">4</div><span class="ch" style="background:#4285f4">09:00 牙套回診</span><span class="ch" style="background:#4285f4">12:00 午餐會</span><span class="ch" style="background:#4285f4">17:00 專案週報</span><span class="more">還有 2 筆</span></div>
+        <div class="d"><div class="n">5</div><span class="ch" style="background:#4285f4">07:00 健身房</span></div>
+        <div class="d"><div class="n">6</div><span class="ch" style="background:#4285f4">15:00 客戶簡報</span></div>
+        <div class="d"><div class="n">7</div></div>
+        <div class="d"><div class="n">8</div><span class="ch allday" style="background:#4285f4">✦ 家庭日</span></div>
+        <div class="d"><div class="n">9</div><span class="ch" style="background:#4285f4">10:00 週會</span></div>
+        <div class="d"><div class="n">10</div><span class="ch allday" style="background:#4285f4">✦ 看牙醫</span><span class="ch" style="background:#4285f4">19:00 讀書會</span></div>
+        <div class="d"><div class="n">11</div></div>
+        <div class="d"><div class="n">12</div></div>
+        <div class="d"><div class="n">13</div></div>
+        <div class="d"><div class="n">14</div></div>
+        <div class="d"><div class="n">15</div><span class="ch" style="background:#4285f4">✦ 14:00 金曲獎得主講座</span></div>
+        <div class="d"><div class="n">16</div><span class="ch" style="background:#4285f4">10:00 週會</span></div>
+        <div class="d"><div class="n">17</div><span class="ch" style="background:#0b8043">✦ 14:00 AI 講座 第3場</span></div>
+        <div class="d"><div class="n">18</div></div>
+        <div class="d"><div class="n">19</div></div>
+        <div class="d"><div class="n">20</div></div>
+        <div class="d"><div class="n">21</div></div>
+        <div class="d"><div class="n">22</div></div>
+        <div class="d"><div class="n">23</div><span class="ch" style="background:#4285f4">10:00 週會</span></div>
+        <div class="d"><div class="n">24</div></div>
+        <div class="d"><div class="n">25</div></div>
+        <div class="d"><div class="n">26</div></div>
+        <div class="d"><div class="n">27</div></div>
+        <div class="d"><div class="n">28</div></div>
+        <div class="d"><div class="n">29</div></div>
+        <div class="d"><div class="n">30</div><span class="ch" style="background:#4285f4">10:00 週會</span></div>
+        <div class="d out"><div class="n">12/1</div></div>
+        <div class="d out"><div class="n">2</div></div>
+        <div class="d out"><div class="n">3</div></div>
+        <div class="d out"><div class="n">4</div></div>
+        <div class="d out"><div class="n">5</div></div>
+        <div class="d out"><div class="n">6</div><span class="ch" style="background:#4285f4">✦ 20:00 爵士之夜</span></div>
+        <div class="d out"><div class="n">7</div></div>
+        <div class="d out"><div class="n">8</div></div>
+        <div class="d out"><div class="n">9</div></div>
+        <div class="d out"><div class="n">10</div></div>
+        <div class="d out"><div class="n">11</div></div>
+        <div class="d out"><div class="n">12</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 日曆：週 ============ -->
+<h2 class="sec" id="p6">日曆：週檢視</h2>
+<p class="note">每小時 48px，預設捲到 07:00（此處顯示 07:00–17:00 一段）；全天列在上方；重疊的行程並排各佔一半寬度。</p>
+<div class="frame">
+  <div class="topbar"><span class="brand">AI 祕書</span><div class="nav"><span>新增行程</span><span class="on">日曆</span><span>歷史紀錄</span><span>設定</span></div><div class="right"><span class="ghost-pill">🌙 夜晚</span></div></div>
+  <div class="calmain">
+    <div class="toolbar"><span class="btn se sm">今天</span><span class="btn gh sm">‹</span><span class="btn gh sm">›</span><span class="period num">2026 年 11 月 1 日 – 7 日</span><div class="tabs"><span>月</span><span class="on">週</span><span>清單</span></div></div>
+    <div class="week">
+      <div class="wkhead num"><div></div><div>日<b>1</b></div><div>一<b>2</b></div><div>二<b>3</b></div><div>三<b>4</b></div><div>四<b>5</b></div><div>五<b>6</b></div><div>六<b>7</b></div></div>
+      <div class="wkall"><div>全天</div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+      <div class="wkgrid num">
+        <div class="times"><div>07:00</div><div>08:00</div><div>09:00</div><div>10:00</div><div>11:00</div><div>12:00</div><div>13:00</div><div>14:00</div><div>15:00</div><div>16:00</div></div>
+        <div class="wkcol"></div>
+        <div class="wkcol"><div class="blk" style="top:144px;height:48px;background:#4285f4">週會<br>10:00–11:00</div></div>
+        <div class="wkcol"><div class="blk" style="top:336px;height:96px;background:#0b8043">✦ AI 講座 第1場<br>14:00–16:00</div></div>
+        <div class="wkcol"><div class="blk half-l" style="top:96px;height:48px;background:#4285f4">牙套回診</div><div class="blk half-r" style="top:120px;height:48px;background:#0b8043">設計審查</div><div class="blk" style="top:240px;height:48px;background:#4285f4">午餐會</div></div>
+        <div class="wkcol"><div class="blk" style="top:0;height:48px;background:#4285f4">健身房<br>07:00–08:00</div></div>
+        <div class="wkcol"><div class="blk" style="top:384px;height:48px;background:#4285f4">客戶簡報 🔒<br>15:00–16:00</div></div>
+        <div class="wkcol"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 日曆：清單 ============ -->
+<h2 class="sec" id="p7">日曆：清單檢視</h2>
+<div class="frame">
+  <div class="topbar"><span class="brand">AI 祕書</span><div class="nav"><span>新增行程</span><span class="on">日曆</span><span>歷史紀錄</span><span>設定</span></div><div class="right"><span class="ghost-pill">🌙 夜晚</span></div></div>
+  <div class="calmain">
+    <div class="toolbar"><span class="btn se sm">今天</span><span class="btn gh sm">‹</span><span class="btn gh sm">›</span><span class="period num">2026/11/01 起 30 天</span><div class="tabs"><span>月</span><span>週</span><span class="on">清單</span></div></div>
+    <div class="agenda num">
+      <div class="day">11/02（一）</div>
+      <div class="it"><span>10:00–11:00</span><span class="dot" style="background:#4285f4"></span><span class="trunc">週會</span><span class="muted trunc">會議室 A</span></div>
+      <div class="day">11/03（二）</div>
+      <div class="it"><span>14:00–16:00</span><span class="dot" style="background:#0b8043"></span><span class="trunc">✦ AI 講座 第1場</span><span class="muted trunc"></span></div>
+      <div class="day">11/04（三）</div>
+      <div class="it"><span>19:00–21:00</span><span class="dot" style="background:#4285f4"></span><span class="trunc">✦ 跟小王吃飯</span><span class="muted trunc">信義區</span></div>
+      <div class="it"><span>19:30–20:30</span><span class="dot" style="background:#4285f4"></span><span class="trunc">部門聚餐</span><span class="muted trunc"></span></div>
+      <div class="day">11/08（日）</div>
+      <div class="it"><span>全天</span><span class="dot" style="background:#4285f4"></span><span class="trunc">✦ 家庭日</span><span class="muted trunc"></span></div>
+      <div style="text-align:center;padding:16px"><span class="btn se sm">載入更多</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 日曆：對話框 ============ -->
+<h2 class="sec" id="p8">日曆：詳情、唯讀、編輯、刪除確認</h2>
+<p class="note">詳情對話框寬 480px、編輯對話框寬 640px。編輯前先讀 Google 最新內容；若期間被別處修改，頂部顯示警告條並換成最新內容。</p>
+<div class="frame">
+  <div class="overlay">
+    <div class="dialog">
+      <div class="bar" style="background:#4285f4"></div>
+      <div class="in">
+        <h3>跟小王吃飯 <span class="bd ai" style="vertical-align:middle">✦ AI 祕書</span></h3>
+        <div class="ln num"><span>🕒</span><span>2026/11/04（三）19:00 – 21:00</span></div>
+        <div class="ln"><span>📍</span><span>信義區</span></div>
+        <div class="ln"><span>🔁</span><span>不重複</span></div>
+        <div class="ln"><span>🔔</span><span>日曆預設</span></div>
+        <div class="ln"><span>📅</span><span>我的日曆</span></div>
+        <div class="ln"><span>📝</span><span>朋友聚餐，地點在信義區。<br><span class="muted">來源：貼上的文字　（由 AI 祕書加入）</span></span></div>
+      </div>
+      <div class="foot"><a class="left" style="font-size:14px">在 Google 日曆開啟 ↗</a><span class="btn dg">刪除</span><span class="btn pr">編輯</span></div>
+    </div>
+    <div class="dialog">
+      <div class="bar" style="background:#4285f4"></div>
+      <div class="in">
+        <h3>客戶簡報 <span class="bd" style="vertical-align:middle">唯讀</span></h3>
+        <div class="ln num"><span>🕒</span><span>2026/11/06（五）15:00 – 16:00</span></div>
+        <div class="ln"><span>👤</span><span>主辦人 boss@example.com</span></div>
+        <div class="warnbar" style="margin-top:8px">這是別人邀請你的行程，只能在 Google 日曆回覆</div>
+      </div>
+      <div class="foot"><a class="left" style="font-size:14px">在 Google 日曆開啟 ↗</a><span class="btn se">關閉</span></div>
+    </div>
+    <div class="dialog wide">
+      <div class="in">
+        <h3>編輯行程</h3>
+        <div class="warnbar" style="margin-bottom:12px">這筆行程剛在別處被修改，已載入最新內容，請確認後再儲存</div>
+        <div class="ev" style="margin:0">
+          <div class="head"><span class="title">週會</span></div>
+          <div class="rows" style="margin-left:0">
+            <div class="row"><span class="ic">🕒</span><span class="field num">2026/10/26（一）</span><span class="field num">10:30</span>–<span class="field num">2026/10/26（一）</span><span class="field num">11:30</span></div>
+            <div class="row"><span class="ic">📍</span><span class="field" style="flex:1">會議室 A</span></div>
+            <div class="row"><span class="ic">🔁</span><b>每週一，不結束</b><a>編輯</a></div>
+            <div class="row"><span class="ic">🔔</span><span class="field sel" style="width:160px">10 分鐘前</span></div>
+            <div class="row"><span class="ic">📅</span><span class="field ro" style="width:180px"><span class="dot" style="background:#4285f4"></span>我的日曆</span></div>
+          </div>
+        </div>
+        <p class="muted" style="font-size:13px;margin:10px 0 0">這是重複行程，修改會套用到整個系列。</p>
+      </div>
+      <div class="foot"><span class="btn gh">取消</span><span class="btn pr">儲存</span></div>
+    </div>
+    <div class="dialog">
+      <div class="in">
+        <h3>確定刪除「週會」？</h3>
+        <p style="font-size:14px;margin:0">這是重複行程，會刪除整個系列（每週一，不結束）。</p>
+      </div>
+      <div class="foot"><span class="btn gh">取消</span><span class="btn da">刪除</span></div>
+    </div>
+    <div class="dialog wide">
+      <div class="in">
+        <h3>新增行程</h3>
+        <div class="ev" style="margin:0">
+          <div class="head"><span class="title muted">標題</span></div>
+          <div class="rows" style="margin-left:0">
+            <div class="row"><span class="ic">🕒</span><span class="field num">2026/11/12（四）</span><span class="field ph">開始時間</span>–<span class="field num">2026/11/12（四）</span><span class="field ph">結束時間</span><span class="row"><span class="chk on">✓</span>全天</span></div>
+            <div class="row"><span class="ic">📅</span><span class="field sel" style="width:180px"><span class="dot" style="background:#0b8043"></span>工作</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="foot"><span class="btn gh">取消</span><span class="btn di">儲存</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 日曆：空與錯誤 ============ -->
+<h2 class="sec" id="p9">日曆：空資料與錯誤</h2>
+<div class="small-frames">
+  <div class="frame"><div class="cap">Google 未連結</div><div class="body"><div class="empty"><div class="big">🔗</div><b>請先連結 Google 日曆</b>連結後就能在這裡看到並管理所有行程<div style="margin-top:12px"><span class="btn pr">前往設定</span></div></div></div></div>
+  <div class="frame"><div class="cap">清單檢視：期間無行程</div><div class="body"><div class="empty"><div class="big">🗓</div><b>這段期間沒有行程</b></div></div></div>
+  <div class="frame"><div class="cap">部分日曆讀取失敗</div><div class="body"><div class="warnbar">無法讀取：工作</div></div></div>
+  <div class="frame"><div class="cap">所有日曆都未勾選</div><div class="body"><div class="empty"><b>請在左側勾選要顯示的日曆</b></div></div></div>
+  <div class="frame"><div class="cap">Google 授權過期</div><div class="body"><div class="warnbar">Google 授權已過期，請到 <a>設定</a> 重新連結</div></div></div>
+</div>
+
+<!-- ============ 歷史紀錄 ============ -->
+<h2 class="sec" id="p10">歷史紀錄</h2>
+<p class="note">頁面 <code>/history</code>，最大寬 960px。開頁時與 Google 同步：手機上改過的顯示新內容、刪掉的標「已在 Google 刪除」。</p>
+<div class="frame rel">
+  <div class="topbar"><span class="brand">AI 祕書</span><div class="nav"><span>新增行程</span><span>日曆</span><span class="on">歷史紀錄</span><span>設定</span></div><div class="right"><span class="ghost-pill">🌙 夜晚</span></div></div>
+  <div class="body"><div class="col960">
+    <h1 class="pt">歷史紀錄</h1>
+    <div class="syncline"><span>共 4 筆</span><span>已與 Google 同步（14:35）</span></div>
+    <table class="htable num">
+      <colgroup><col style="width:92px"><col><col style="width:150px"><col style="width:90px"><col style="width:150px"><col style="width:70px"><col style="width:110px"><col style="width:150px"></colgroup>
+      <tr><th>加入時間</th><th>標題</th><th>行程時間</th><th>日曆</th><th>來源</th><th>AI</th><th>狀態</th><th></th></tr>
+      <tr><td>10/25 14:02</td><td class="trunc" title="跟小王吃火鍋">跟小王吃火鍋</td><td>11/04 19:00–21:00</td><td class="trunc">我的日曆</td><td class="trunc">文字</td><td>Claude</td><td><span class="bd ok">已加入</span></td><td><a>開啟</a>　<a>編輯</a>　<span class="btn dg sm">⋯</span></td></tr>
+      <tr><td>10/25 14:10</td><td class="trunc" title="金曲獎得主講座">金曲獎得主講座</td><td>11/15 14:00–16:00</td><td class="trunc">我的日曆</td><td class="trunc">連結 <a title="https://www.accupass.com/event/2611150001">accupass.com/…</a></td><td>Codex</td><td><span class="bd">已在 Google 刪除</span></td><td class="muted">開啟　編輯</td></tr>
+      <tr><td>10/25 14:20</td><td class="trunc" title="瑜珈課">瑜珈課 🔁</td><td>每週三 19:00</td><td class="trunc">我的日曆</td><td>文字</td><td>Claude</td><td><span class="bd ok">已加入</span></td><td><a>開啟</a>　<a>編輯</a>　<span class="btn dg sm">⋯</span></td></tr>
+      <tr><td>10/25 14:31</td><td class="trunc" title="週五開會">週五開會</td><td>10/30 15:00–16:00</td><td class="trunc">工作</td><td>手動</td><td>—</td><td><span class="bd ok">已加入</span></td><td><a>開啟</a>　<a>編輯</a>　<span class="btn dg sm">⋯</span></td></tr>
+    </table>
+    <p class="muted" style="font-size:12px">「⋯」選單：從日曆刪除、刪除紀錄（皆需二次確認）</p>
+    <div class="pager"><span class="btn se sm">上一頁</span><span>第 1／1 頁</span><span class="btn se sm">下一頁</span></div>
+  </div></div>
+  <div class="toast">已從日曆刪除</div>
+</div>
+
+<h2 class="sec" id="p11">歷史紀錄：空資料與錯誤</h2>
+<div class="small-frames">
+  <div class="frame"><div class="cap">空資料</div><div class="body"><div class="empty"><div class="big">📭</div><b>還沒有加入過行程</b><div style="margin-top:12px"><span class="btn pr">去新增</span></div></div></div></div>
+  <div class="frame"><div class="cap">同步失敗</div><div class="body"><div class="warnbar">無法與 Google 同步：Google 授權已過期，以下為本機紀錄</div></div></div>
+  <div class="frame"><div class="cap">Google 未連結</div><div class="body"><div class="syncline"><span>未連結 Google，顯示本機紀錄</span></div></div></div>
+</div>
+
+<!-- ============ 設定 ============ -->
+<h2 class="sec" id="p12">設定</h2>
+<p class="note">頁面 <code>/settings</code>。示範：Claude 登入流程中（需貼授權碼）、Codex 登入流程中（裝置代碼）、Google 已連結。</p>
+<div class="frame">
+  <div class="topbar"><span class="brand">AI 祕書</span><div class="nav"><span>新增行程</span><span>日曆</span><span>歷史紀錄</span><span class="on">設定</span></div><div class="right"><span class="ghost-pill">🌙 夜晚</span></div></div>
+  <div class="body"><div class="col760">
+    <h1 class="pt">設定</h1>
+    <div class="card svc">
+      <div class="h"><b>Claude</b><span class="bd d">未登入</span><div class="act"><span class="btn gh sm">取消</span></div></div>
+      <p>用你的 Claude 訂閱解析行程（模型 claude-haiku-5-5）</p>
+      <div class="panel">
+        <div>1. 打開這個網址並登入：<a class="mono">https://claude.ai/oauth/authorize?…</a> <span class="btn se sm">複製</span></div>
+        <div class="row">2. 把頁面顯示的授權碼貼在這裡：<span class="field ph" style="width:240px">授權碼</span><span class="btn pr sm">送出</span></div>
+      </div>
+    </div>
+    <div class="card svc">
+      <div class="h"><b>Codex</b><span class="bd d">未登入</span><div class="act"><span class="btn gh sm">取消</span></div></div>
+      <p>用你的 ChatGPT 訂閱解析行程（模型 gpt-5.6-sol）</p>
+      <div class="panel">
+        <div>1. 打開這個網址：<a class="mono">https://auth.openai.com/…</a> <span class="btn se sm">複製</span></div>
+        <div>2. 輸入代碼：<span class="code">ABCD-1234</span> <span class="btn se sm">複製</span></div>
+        <div class="muted"><span class="spin"></span>　等待授權中…</div>
+      </div>
+    </div>
+    <div class="card svc">
+      <div class="h"><b>Google 日曆</b><span class="bd ok">已連結</span><span class="muted" style="font-size:14px">peter@example.com</span><div class="act"><span class="btn se sm">中斷連結</span></div></div>
+      <p>行程會寫入這個帳號的 Google 日曆，手機上的 Google 日曆 App 會同步看到</p>
+    </div>
+  </div></div>
+</div>
+
+<h2 class="sec" id="p13">設定：錯誤狀態</h2>
+<div class="small-frames">
+  <div class="frame"><div class="cap">登入失敗＋後備指令</div><div class="body">
+    <div class="msg">授權碼不正確，登入失敗</div>
+    <div style="margin-top:10px;font-size:14px">也可以在終端機執行：<span class="mono">docker compose exec -it app claude auth login</span> <span class="btn se sm">複製</span></div>
+    <div style="margin-top:10px"><span class="btn pr sm">重試</span></div>
+  </div></div>
+  <div class="frame"><div class="cap">Google 未設定憑證</div><div class="body">
+    <div class="warnbar">尚未設定 Google 憑證：請依 README『建立 Google 憑證』在 .env 填入 GOOGLE_CLIENT_ID／GOOGLE_CLIENT_SECRET 後重啟</div>
+    <div style="margin-top:10px"><span class="btn di">連結 Google 日曆</span></div>
+  </div></div>
+  <div class="frame"><div class="cap">已登入</div><div class="body">
+    <div class="h" style="display:flex;align-items:center;gap:10px"><b>Codex</b><span class="bd ok">已登入</span><span class="btn se sm" style="margin-left:auto">登出</span></div>
+  </div></div>
+  <div class="frame"><div class="cap">替身模式（驗收環境）頂欄</div><div class="topbar"><span class="brand">AI 祕書</span><span class="bd w">替身模式</span><div class="right"><span class="ghost-pill">🌙 夜晚</span></div></div></div>
+</div>
+
+</div>
+<script>
+(function () {
+  var btn = document.getElementById("themeBtn"), root = document.documentElement, key = "AI_祕書-report-theme";
+  function label() { btn.textContent = root.getAttribute("data-theme") === "dark" ? "☀️ 白天" : "🌙 夜晚"; }
+  btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem(key, next); } catch (e) {}
+    label();
+  });
+  label();
+})();
+</script>
+</body>
+</html>
