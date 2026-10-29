@@ -9,6 +9,8 @@
 !blacktea/
 !blacktea/**
 blacktea/export/
+blacktea/evals/cases/
+blacktea/evals/runs/
 !skills/
 !skills/**
 skills/synced/

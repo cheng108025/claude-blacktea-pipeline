@@ -21,7 +21,7 @@
 - 首次建案／舊版遷移：full。change／amend／修復：incremental，基準是此次 plan commit；若基準缺失或影響範圍不明，升 full。
 - 派工前 `allocate --kind V --count <需要數>` 可先保留 ID 區間；也可讓稽核員先回臨時 ID，再由你統一映射。歷史上限只由 state 管，不從前一份報告猜。
 - 首輪做 install/build/test 與必要啟動驗證。小修只跑受影響檢查；共享契約、依賴、資料庫或 build 設定改動需全套。沒有測試也記明，不拿「零測試」當功能證據。
-- 每次收回稽核結果，先 `record-check --stage audit --result <結果> --evidence <04絕對路徑>`。agent3 回 PASS：進實測。FAIL：`attempt --key audit --limit 3`，再 dispatch 修復、agent3 複審。只有 agent3 可關閉 V。
+- 每次收回稽核結果，先 `record-check --stage audit --result <結果> --evidence <04絕對路徑>`。每個新開或仍 open 的 V 記 `finding --id V-xxx --outcome open --severity <級> --stage audit --origin <introduced|pre-existing|unknown>`（再次被報 open 會累計輪數）；agent3 關閉時記 `fixed`、撤回記 `withdrawn --reason`、使用者豁免記 `waived --reason`、列為已知限制不修記 `accepted --reason`。實測的 E／U 同樣記，`--stage e2e`。agent3 回 PASS：進實測。FAIL：`attempt --key audit --limit 3`，再 dispatch 修復、agent3 複審。只有 agent3 可關閉 V。
 - Medium／Low 預設列已知限制；只有產品驗收必要或 run-policy 指定才修，不因數量觸發重做。
 - ENV_BLOCKED／NEEDS_REQUIREMENT 走共通出口。無人值守選擇帶 open 項前進時，通知實測員相關旅程為已知缺口；不重複修同一個跳過項。
 

@@ -228,6 +228,34 @@ class PipelineTests(Fixture):
         self.assertTrue((self.root / ".pipeline/output/Demo_App_workplan.html").exists())
         self.assertEqual(source.read_text(), "> 狀態：FINAL\n\n# 規格書\n\n## 缺口總覽\n\n無缺口\n")
 
+    def test_finding_outcomes_feed_metrics(self):
+        self.begin()
+        self.call("finding", "--id", "V-001", "--outcome", "open", "--severity", "High", "--stage", "audit", "--origin", "introduced")
+        self.call("finding", "--id", "V-001", "--outcome", "open")
+        self.call("finding", "--id", "V-001", "--outcome", "fixed")
+        self.call("finding", "--id", "V-002", "--outcome", "open", "--severity", "Medium", "--stage", "audit", "--origin", "pre-existing")
+        self.call("finding", "--id", "V-003", "--outcome", "open", "--severity", "Low", "--stage", "ticket")
+        self.call("finding", "--id", "V-003", "--outcome", "withdrawn", "--reason", "behavior is specified")
+        with self.assertRaises(ValueError):
+            self.call("finding", "--id", "V-004", "--outcome", "open")  # new finding needs severity and stage
+        with self.assertRaises(ValueError):
+            self.call("finding", "--id", "V-002", "--outcome", "waived")  # needs a reason
+        m = self.call("metrics")
+        self.assertEqual(m["findings"], 3)
+        self.assertEqual(m["by_outcome"], {"fixed": 1, "open": 1, "withdrawn": 1})
+        self.assertEqual(m["noise_rate"], 0.5)
+        self.assertEqual(m["escaped_past_ticket_check"], 1)  # V-001 only: V-002 pre-existing, V-003 ticket stage
+        self.assertEqual(m["multi_round_findings"], 1)
+
+    def test_metrics_first_pass_rate(self):
+        self.begin()
+        (self.cwd / "app.py").write_text("print(2)\n")
+        self.receipt()
+        self.integrate()
+        m = self.call("metrics")
+        self.assertEqual(m["tickets_committed"], 1)
+        self.assertEqual(m["ticket_first_pass_rate"], 1.0)
+
     def test_render_rejects_unknown_group(self):
         self.write_plan([dict(ticket(), group="missing")])
         with self.assertRaises(ValueError):

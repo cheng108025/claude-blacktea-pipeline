@@ -62,6 +62,6 @@
 
 `COMPLETED`＝本輪必要票均 COMMITTED、必要稽核與實測均 PASS（可扣使用者指定 waiver；無實作票的純規格修訂可記有理由的實測 N/A）。跳過階段、缺能力、未完成票或驗證失敗均為 `INCOMPLETE`；報告首行列原因。
 
-每輪寫 `<R>/` 的 build-log、ticket-checks、04、05；V／E／U ID 用腳本 `allocate`，Q 由 question 分配；全專案遞增。修復工作項 ID 用 `fix-<run>-<audit|e2e|overall>-<attempt>-<batch>`，不可省略來源。证據用工作項 ID＋檢查次數，舊檔不覆寫。
+每輪寫 `<R>/` 的 build-log、ticket-checks、04、05；V／E／U ID 用腳本 `allocate`，Q 由 question 分配；全專案遞增。每個 V／E／U 的狀態變化都用 `finding` 記進 state（復盤與評測靠它統計），報告文字不能取代這筆紀錄。修復工作項 ID 用 `fix-<run>-<audit|e2e|overall>-<attempt>-<batch>`，不可省略來源。证據用工作項 ID＋檢查次數，舊檔不覆寫。
 
 `output/reports/<run>-report.md` 寫本輪結果；`FINAL-REPORT.md` 只維護各輪索引、目前 open 發現、waivers 與待裁決事項。結果從結構化狀態整理；長輸出留證據檔。規格／報告的單 commit 不得夾帶程式碼。

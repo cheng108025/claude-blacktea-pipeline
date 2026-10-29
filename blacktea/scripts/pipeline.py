@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Local blacktea state, plan, and verification helpers. No network or Git writes."""
 import argparse
+from collections import Counter
 import contextlib
 import fcntl
 import hashlib
@@ -260,7 +261,7 @@ class Engine:
         self.state = {"schema_version": 2, "current_run": None, "runs": {}, "tickets": {},
                       "next_ids": {k: 1 for k in "VEUQ"}, "decisions": [],
                       "questions": {}, "push": {"status": "READY", "reason": ""},
-                      "external_reviews": {}, "incremental_since_full": 0}
+                      "external_reviews": {}, "incremental_since_full": 0, "findings": {}}
         if legacy:
             data = read_json(legacy)
             for ident, task in data.get("tickets", {}).items():
@@ -537,7 +538,60 @@ def parser():
     sp = sub.add_parser("phase"); sp.add_argument("--name", choices=["build", "audit", "e2e", "report"], required=True); sp.add_argument("--status", choices=["RUNNING", "NEEDS_USER", "COMPLETED", "INCOMPLETE"], required=True); sp.add_argument("--reason", default="")
     sp = sub.add_parser("record-check"); sp.add_argument("--stage", choices=["audit", "e2e"], required=True); sp.add_argument("--result", choices=["PASS", "FAIL", "ENV_BLOCKED", "NEEDS_REQUIREMENT", "SKIPPED", "N/A"], required=True); sp.add_argument("--evidence", required=True); sp.add_argument("--reason", default="")
     sp = sub.add_parser("record-e2e"); sp.add_argument("--scope", choices=["full", "incremental"], required=True); sp.add_argument("--result", choices=["PASS", "FAIL", "ENV_BLOCKED"], required=True)
+    sp = sub.add_parser("finding"); sp.add_argument("--id", required=True); sp.add_argument("--outcome", choices=sorted(OUTCOMES), required=True)
+    sp.add_argument("--severity", choices=["Critical", "High", "Medium", "Low"]); sp.add_argument("--stage", choices=["ticket", "audit", "e2e", "security"])
+    sp.add_argument("--origin", choices=["introduced", "pre-existing", "unknown"]); sp.add_argument("--task", default=""); sp.add_argument("--reason", default="")
+    sub.add_parser("metrics")
     return p
+
+
+# fixed: 修正並由原角色確認；withdrawn: 誤報撤回；waived: 使用者豁免；accepted: 判定不修（不重要／故意）
+OUTCOMES = {"open", "fixed", "withdrawn", "waived", "accepted"}
+
+
+def record_finding(state, run_id, a):
+    require(re.fullmatch(r"[VEU]-\d{3,}", a.id), "finding id must look like V-001")
+    findings = state.setdefault("findings", {})
+    entry = findings.get(a.id)
+    if entry is None:
+        require(a.severity and a.stage, "new finding needs --severity and --stage")
+        entry = findings[a.id] = {"severity": a.severity, "stage": a.stage, "origin": a.origin or "unknown",
+                                  "task": a.task, "run_id": run_id, "rounds": 0, "history": []}
+    else:
+        for key in ("severity", "stage", "origin", "task"):
+            if getattr(a, key):
+                entry[key] = getattr(a, key)
+    require(a.outcome == "open" or a.reason.strip() or a.outcome == "fixed", "withdrawn/waived/accepted need --reason")
+    if a.outcome == "open":
+        entry["rounds"] += 1  # each time a reviewer (re)reports it as still open
+    entry["outcome"] = a.outcome
+    entry["history"].append({"time": now(), "run_id": run_id, "outcome": a.outcome, "reason": a.reason})
+    return {a.id: entry}
+
+
+def metrics(state):
+    tickets = [t for t in state["tickets"].values() if t.get("status") == "COMMITTED"]
+    first_pass = [t for t in tickets if t.get("attempt", 0) <= 1]
+    runs = {}
+    for ident, run in state["runs"].items():
+        runs[ident] = {"mode": run["mode"], "status": run["status"], "tasks": len(run["tasks"]),
+                       "repair_rounds": {k: v["count"] for k, v in run["attempts"].items()}}
+    findings = state.get("findings", {})
+    by = lambda key: dict(sorted(Counter(f.get(key, "unknown") for f in findings.values()).items()))
+    closed = [f for f in findings.values() if f.get("outcome") in {"fixed", "withdrawn", "accepted"}]
+    escaped = [f for f in findings.values() if f.get("stage") in {"audit", "e2e", "security"}
+               and f.get("origin") != "pre-existing" and f.get("outcome") != "withdrawn"]
+    return {
+        "tickets_committed": len(tickets),
+        "ticket_first_pass_rate": round(len(first_pass) / len(tickets), 3) if tickets else None,
+        "mean_ticket_attempts": round(sum(t.get("attempt", 0) for t in tickets) / len(tickets), 2) if tickets else None,
+        "runs": runs,
+        "findings": len(findings), "by_outcome": by("outcome"), "by_severity": by("severity"),
+        "by_stage": by("stage"), "by_origin": by("origin"),
+        "noise_rate": round(sum(f["outcome"] == "withdrawn" for f in closed) / len(closed), 3) if closed else None,
+        "escaped_past_ticket_check": len(escaped),
+        "multi_round_findings": sum(f.get("rounds", 0) >= 2 for f in findings.values()),
+    }
 
 
 def execute(a):
@@ -557,6 +611,7 @@ def execute(a):
             engine.save()  # repair state.md if interrupted after atomic JSON write
             return engine.state
         if a.command == "ready": return engine.ready()
+        if a.command == "metrics": return metrics(engine.state)
         if a.command == "start": return engine.start(a.task)
         if a.command == "receipt": return engine.receipt(a.task, a.cwd, a.evidence)
         if a.command == "verify-receipt": return engine.verify(a.task)
@@ -593,6 +648,8 @@ def execute(a):
             require(result["status"] == "OPEN", "question already resolved")
             result.update(status="RESOLVED", answer=a.answer, resolved_at=now())
             engine.state["decisions"].append({"time": now(), "run_id": engine.state["current_run"], "reason": a.id + ": " + a.answer})
+        elif a.command == "finding":
+            result = record_finding(engine.state, engine.state["current_run"], a)
         elif a.command == "push-state":
             result = engine.state["push"] = {"status": a.status, "reason": a.reason, "updated_at": now()}
         elif a.command == "external-review":
