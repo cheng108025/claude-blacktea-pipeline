@@ -180,6 +180,49 @@ def score(case, result, window):
     return {"hit": hit, "file_hit": bool(same_file), "finding_count": len(findings)}
 
 
+JUDGE_SCHEMA = {"type": "object", "properties": {"same_bug": {"type": "boolean"}, "reason": {"type": "string"}},
+                "required": ["same_bug", "reason"]}
+JUDGE_PROMPT = """判斷審查員是否找到了已知 bug。只看描述的是不是同一個缺陷（同一個根因或同一個錯誤行為）；行號不同沒關係，只是同檔案的其他問題不算。
+已知 bug（{file}）：{summary}
+審查員在同檔案的回報：
+{reported}"""
+
+
+def judge(case, result, model, budget):
+    same_file = [f for f in result["findings"] or []
+                 if f["file"].lstrip("./").endswith(case["file"]) or case["file"].endswith(f["file"].lstrip("./"))]
+    if not same_file:
+        return False, "no finding in the same file"
+    reported = "\n".join(f"- 第 {f['line']} 行：{f['summary']}" for f in same_file)
+    command = ["claude", "-p", JUDGE_PROMPT.format(file=case["file"], summary=case["summary"], reported=reported),
+               "--model", model, "--output-format", "json", "--json-schema", json.dumps(JUDGE_SCHEMA),
+               "--tools", "", "--no-session-persistence", "--max-budget-usd", str(budget)]
+    proc = subprocess.run(command, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=300)
+    try:
+        data = json.loads(proc.stdout)
+        verdict = data.get("structured_output") or json.loads(data["result"])
+        return bool(verdict["same_bug"]), verdict["reason"][:300]
+    except (ValueError, TypeError, KeyError):
+        return None, "judge output unparsed"
+
+
+def rescore(args):
+    out = RUNS / args.label
+    cases = {c["id"]: c for c in load_cases(include_pre_existing=True)}
+    for path in sorted(out.glob("*.json")):
+        result = json.loads(path.read_text())
+        case = cases[result["case"]]
+        if result["findings"] is None:
+            continue
+        if result["hit"]:
+            result["judged"], result["judge_reason"] = True, "location hit"
+        elif "judged" not in result or args.force:
+            result["judged"], result["judge_reason"] = judge(case, result, args.model, args.budget_usd)
+            print(f"{case['id']}: judged={result['judged']}", flush=True)
+        path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+    return summarize(args.label, [json.loads(p.read_text()) for p in sorted(out.glob("*.json"))])
+
+
 def run(args):
     cases = load_cases(args.cases, args.include_pre_existing)
     if args.limit:
@@ -208,8 +251,11 @@ def summarize(label, results):
     done = [r for r in results if r["findings"] is not None]
     costs = [r["cost_usd"] for r in results if r["cost_usd"] is not None]
     agents = sorted({r.get("agent", "?") for r in results})
+    judged = [r for r in done if "judged" in r]
     return {"label": label, "agent": ",".join(agents), "cases": len(results), "completed": len(done),
             "hits": sum(r["hit"] for r in done), "file_hits": sum(r["file_hit"] for r in done),
+            "judged_hits": sum(r["judged"] is True for r in judged) if judged else None,
+            "judged_rate": round(sum(r["judged"] is True for r in judged) / len(results), 3) if judged else None,
             "hit_rate": round(sum(r["hit"] for r in done) / len(results), 3) if results else 0,
             "mean_findings": round(sum(r["finding_count"] for r in done) / len(done), 2) if done else 0,
             "cost_usd": round(sum(costs), 2)}
@@ -218,12 +264,15 @@ def summarize(label, results):
 def append_scoreboard(s):
     if not SCOREBOARD.exists():
         SCOREBOARD.write_text("# 評測計分表\n\n只記彙總數字；案例與原始輸出留在本機（cases/、runs/ 不入版控）。\n"
-                              "命中＝同檔案且行號在容許範圍內。改引擎後重跑，命中率不得低於上一版。\n\n"
-                              "| 日期 | 標籤 | 角色 | 案例 | 完成 | 命中 | 同檔 | 命中率 | 平均發現數 | 花費 USD |\n"
+                              "位置命中＝同檔案且行號在 30 行內；語意命中＝位置命中，或同檔案回報經 `rescore` 判定為同一個 bug（主指標）。\n"
+                              "改引擎後重跑，語意命中數不得比上一版少 2 個以上。\n\n"
+                              "| 日期 | 標籤 | 角色 | 案例 | 完成 | 位置命中 | 語意命中 | 語意命中率 | 平均發現數 | 審查花費 USD |\n"
                               "|---|---|---|---|---|---|---|---|---|---|\n")
+    judged = "—" if s.get("judged_hits") is None else s["judged_hits"]
+    rate = "—" if s.get("judged_rate") is None else f"{s['judged_rate']:.1%}"
     with SCOREBOARD.open("a") as f:
         f.write(f"| {datetime.now().date()} | {s['label']} | {s['agent']} | {s['cases']} | {s['completed']} | {s['hits']} | "
-                f"{s['file_hits']} | {s['hit_rate']:.1%} | {s['mean_findings']} | {s['cost_usd']} |\n")
+                f"{judged} | {rate} | {s['mean_findings']} | {s['cost_usd']} |\n")
 
 
 def report(labels):
@@ -249,6 +298,10 @@ def main():
     r.add_argument("--window", type=int, default=30)
     r.add_argument("--keep", action="store_true", help="keep the clone for debugging")
     r.add_argument("--no-scoreboard", action="store_true")
+    rs = sub.add_parser("rescore", help="LLM-judge same-file misses of an existing run")
+    rs.add_argument("--label", required=True); rs.add_argument("--model", default="haiku")
+    rs.add_argument("--budget-usd", type=float, default=0.2); rs.add_argument("--force", action="store_true")
+    rs.add_argument("--no-scoreboard", action="store_true")
     rp = sub.add_parser("report"); rp.add_argument("--label", action="append")
     args = p.parse_args()
     if args.command == "harvest":
@@ -258,6 +311,10 @@ def main():
                   for c in load_cases(include_pre_existing=args.include_pre_existing)]
     elif args.command == "run":
         result = run(args)
+    elif args.command == "rescore":
+        result = rescore(args)
+        if not args.no_scoreboard:
+            append_scoreboard(result)
     else:
         result = report(args.label)
     print(json.dumps(result, ensure_ascii=False, indent=2))

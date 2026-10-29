@@ -16,7 +16,7 @@ disable-model-invocation: true
 2. 提出能改善下一案的教訓：觸發条件、適用角色、行動、理由及證據。一次性專案細節與引擎已規定的內容不重複收錄；零教訓合法。
 3. 比對 `~/.claude/blacktea/lessons.md`：同類合併、矛盾提出修正；不能讓經驗包與引擎同時保留互斥規則。每段最多15條。
 4. 展示具體增刪提案，已有本次明確授權就執行；否則等使用者批准才寫。引擎規則的問題直接列引擎修正提案，不再塞一條相反的教訓。
-4b. **引擎修改要過評測**：改到 agents、skills、protocol、references 的提案，使用者批准後先在 `~/.claude` 改好、跑 `python3 ~/.claude/blacktea/scripts/evals.py run --label <新版本>`（同一組案例、同一個角色），命中率不得低於計分表上一版；結果有隨機波動，差距在 2 個案例內視為持平。低於就不 commit，回報差異讓使用者決定。本案漏過票級檢查、後來才抓到的實作 bug，用 `evals.py harvest --project <專案>` 加進評測集。
+4b. **引擎修改要過評測**：改到 agents、skills、protocol、references 的提案，使用者批准後先在 `~/.claude` 改好、跑 `python3 ~/.claude/blacktea/scripts/evals.py run --label <新版本> --no-scoreboard` 再 `rescore --label <新版本>`（同一組案例、同一個角色），語意命中數不得比計分表上一版少 2 個以上（結果有隨機波動）。低於就不 commit，回報差異讓使用者決定。本案漏過票級檢查、後來才抓到的實作 bug，用 `evals.py harvest --project <專案>` 加進評測集。
 5. 只更新批准內容，回報位置；本機 commit 只包含本次變更，不夾帶他人修改。
 6. 提案處理完（含零教訓或全部否決）且寫入成功，才更新 `.pipeline/state.retro.md`：連續覆蓋到的最後輪名＋該輪 Markdown 工件與報告的排序路徑／SHA256。中斷、待批准、寫入失敗都不推進；匯出／匯入／移除來源不動它。
 

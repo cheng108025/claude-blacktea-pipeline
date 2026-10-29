@@ -114,16 +114,17 @@ python3 ~/.claude/blacktea/scripts/check_engine.py
 
 ### 評測：引擎改了有沒有變好
 
-評測集＝過去專案裡「票級檢查放行、後來才被稽核抓到」的實作 bug。腳本在隔離副本重建當時有 bug 的版本，讓審查角色唯讀審那一輪的改動，看它能不能指到那個 bug（同檔案、行號在 30 行內算命中）。
+評測集＝過去專案裡「票級檢查放行、後來才被稽核抓到」的實作 bug。腳本在隔離副本重建當時有 bug 的版本，讓審查角色唯讀審那一輪的改動，看它能不能指到那個 bug。位置命中＝同檔案、行號在 30 行內；`rescore` 再用便宜模型判斷同檔案的回報是不是同一個 bug（語意命中，主指標）。
 
 ```bash
 python3 ~/.claude/blacktea/scripts/evals.py harvest --project ~/gold      # 從專案歷史收集案例
-python3 ~/.claude/blacktea/scripts/evals.py run --label <版本>             # 跑全部案例，結果記進計分表
+python3 ~/.claude/blacktea/scripts/evals.py run --label <版本> --no-scoreboard
+python3 ~/.claude/blacktea/scripts/evals.py rescore --label <版本>        # 語意判定後記進計分表
 python3 ~/.claude/blacktea/scripts/evals.py report
 ```
 
 - 案例與原始輸出含專案細節，只留本機（`blacktea/evals/cases/`、`runs/` 不入版控；這個 repo 是公開的）。只有彙總數字進 `blacktea/evals/scoreboard.md`。
-- 改引擎（agents、skills、protocol、references）後重跑，命中率不得低於上一版。同一案例每次結果會波動，差 2 個案例內視為持平。
+- 改引擎（agents、skills、protocol、references）後重跑，語意命中數不得比上一版少 2 個以上（同一案例每次結果會波動）。
 - 每個案例都是一次真的 `claude -p`，有花費：預設單案上限 $2，實測約 $0.3～1、1～2 分鐘。
 
 專案層級的量測：`pipeline.py --root <專案> metrics` 輸出票一次通過率、修復輪數、發現結局與誤報率，`/blacktea_retro` 一開頭會列出。
