@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scan-push.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "scan_push.py"
 
 
 class PushScanTests(unittest.TestCase):
@@ -78,6 +78,13 @@ class PushScanTests(unittest.TestCase):
         self.commit("config.py", "pass" + "word = 'real-looking-fixture-value'\n")
         self.commit("config.py", "password = None\n")
         self.assertEqual(self.scan()[0], 1)
+
+    def test_root_option_scans_other_directory(self):
+        self.commit("normal.py", "answer = 42\n")
+        result = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.repo), "--base", self.base],
+                                cwd=tempfile.gettempdir(), capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(json.loads(result.stdout)["pending_commits"], 1)
 
     def test_bad_base_is_unknown(self):
         code, result = self.scan("missing-destination")

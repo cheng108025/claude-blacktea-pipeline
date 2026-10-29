@@ -23,7 +23,12 @@
       "Bash(gh:*)",
       "Bash(playwright:*)",
       "Bash(python3:*)",
-      "Bash(pip:*)"
+      "Bash(pip:*)",
+      "Bash(git worktree add:*)",
+      "Bash(git worktree remove:*)",
+      "Bash(git merge --ff-only:*)",
+      "Bash(git fetch:*)",
+      "Bash(git ls-remote:*)"
     ]
   }
 }

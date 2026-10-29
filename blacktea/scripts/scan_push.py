@@ -17,6 +17,7 @@ documented in skills/git/SKILL.md:
 """
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -243,9 +244,12 @@ def scan(base=None):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", help="Repository to scan (default: current directory)")
     parser.add_argument("--base", help="Verified destination remote ref; omit only for an empty destination")
     args = parser.parse_args()
     try:
+        if args.root:
+            os.chdir(args.root)
         result = scan(args.base)
     except (ScanError, OSError, ValueError) as exc:
         print(json.dumps({"status": "unknown", "error": str(exc)}, ensure_ascii=True))

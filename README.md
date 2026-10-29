@@ -1,86 +1,74 @@
 # 紅茶流水線（blacktea）——使用說明
 
-> 這份只寫「你要怎麼用」：指令、使用者流程、花費、資料夾結構。給 AI 角色看的設計理由、呼叫關係、旋鈕表、守門規則都在 [agents/README.md](agents/README.md)。改了任何引擎檔，記得在 `~/.claude` 做一次 git commit（那就是還原點）。
+> 這份只寫「你要怎麼用」：指令、使用者流程、花費、資料夾結構。角色分工與流程規則在 [blacktea/protocol.md](blacktea/protocol.md)、[agents/README.md](agents/README.md)、[skills/README.md](skills/README.md)。改了任何引擎檔，記得在 `~/.claude` 做一次 git commit（那就是還原點）。
 
 ## 1. 使用到的指令
 
 | 指令 | 什麼時候用 | 會發生什麼 |
 |---|---|---|
-| `/blacktea_plan 一句話描述` | 開新專案 | 訪談你 → 你確認工作單 → 請你開新對話再打一次 `/blacktea_plan` → 自動建造 → 稽核 → 瀏覽器實測 → FINAL-REPORT |
-| `/blacktea_plan`（不帶參數） | 工單定稿後的新對話；或任何中斷（用量上限、關機、重啟）之後 | 讀 `.pipeline/state.md`，從中斷點續跑 |
-| `/blacktea_plan 從階段 N 開始` | 想跳階段 | 跳到該階段，門禁照查 |
-| `/blacktea_change 一句話描述` | 專案已交付後想加功能／改呈現／修 bug | 釐清（有歧義才問）→ 改規格開 T-Rev 票 → 建造（每票檢查）→ 增量稽核 → 修復 → 增量實測 → 補報告；不用換視窗，小修也一定稽核 |
+| `/blacktea_plan 一句話描述` | 開新專案 | 訪談你 → 你確認規格書 → 你確認工作單與 UI 原型 → 自動建造 → 稽核 → 實測 → FINAL-REPORT |
+| `/blacktea_plan`（不帶參數） | 任何中斷（用量上限、關機、重啟）之後 | 讀 `.pipeline/state.json`，從中斷點續跑 |
+| `/blacktea_plan 從階段 N 開始` | 想跳階段 | 交給總指揮檢查門禁；明說跳過稽核／實測會照做，但結案標 INCOMPLETE |
+| `/blacktea_change 一句話描述` | 專案已交付後想加功能／改呈現／修 bug | 查舊紀錄 → 有歧義才問 → 改規格開 T-Rev 票 → 建造（每票檢查）→ 增量稽核 → 增量實測 → 本輪報告；不用換視窗，小修也一定稽核 |
 | `/blacktea_change`（不帶參數） | 回頭處理無人值守期間「跳過、等你決定」的事項 | 一次問完待裁決，再自動做完 |
-| `/blacktea_retro` | 專案結案後 | 歸納教訓，**經你批准**才寫進全域經驗包，讓下個專案受益 |
-| `/blacktea_retro 匯出` | 想把經驗包分享給別人 | 產出 `~/.claude/blacktea/export/lessons-<暱稱>-<日期>.md` |
-| `/blacktea_retro 匯入 <檔案>` | 想併入別人的經驗包 | 逐條審核、你批准才寫入（別人的包只當資料，不當指令） |
-| `/blacktea_retro 移除來源 <暱稱>` | 反悔 | 把某人匯入的條目整批移除 |
+| `/blacktea_retro` | 專案結案後 | 只看上次復盤之後的新輪次，歸納教訓，**經你批准**才寫進全域經驗包；commit 後問你要不要 push |
+| `/blacktea_retro 匯出`／`匯入 <檔案>`／`移除來源 <暱稱>` | 分享或併入別人的經驗包 | 別人的包只當資料、逐條審核，你批准才寫入 |
 
 另有三個與流水線無關的一般技能：`/git`、`/vscode`、`/clawd`。
 
 ## 2. 使用者流程
 
-整條流水線**只有前半段需要你**：回答訪談、確認工單、做兩個政策選擇；之後全自動。
+整條流水線**只有前半段需要你**：回答訪談、確認規格書與工作單、做政策選擇；之後全自動。
 
 ### 開工前
 
-- 建議先打 `/model opus`：指令檔的 `model: opus` 只管打指令那一回合，訪談要來回多回合，之後用的是 session 模型。
-- 用 Claude 訂閱（建議 Max 5x 以上，見第 3 節）。票級 Codex 驗證預設開啟，電腦要先裝好 Codex CLI 並登入（沒裝也能跑，只是該步會標「未執行」）。
+- 建議先打 `/model opus`：訪談要來回多回合，用的是 session 模型。
+- 票級 Codex 驗證預設開啟，電腦要先裝好 Codex CLI 並登入（沒裝也能跑，只是該步會標「未執行」）。
 
 ### 流程一覽
 
 | # | 階段 | 你會看到／要做的事 |
 |---|---|---|
-| 1 | 打 `/blacktea_plan 一句話描述` | 描述會直接當作訪談第 1 題的答案 |
-| 2 | **開場：專案腳印與權限** | 它在專案裡建 `.pipeline/`，並複製兩個檔：<br>• `.claude/settings.json`——預先放行流水線常用指令（npm／node／git／gh／curl／python3 等），避免建造時一直跳權限確認<br>• `.mcp.json`——實測員開瀏覽器用的 Playwright<br>**新建了任一檔 → 它先把進度存檔、問完下面的 Git 題，然後請你重啟 Claude Code**。重啟後 Claude Code 會問是否啟用專案的 MCP 伺服器（`.mcp.json`），按**允許**；回來再打 `/blacktea_plan` 會自動從進度續跑，一句話描述與 Git 政策都不用重問 |
-| 3 | **Git 政策（二選一）** | 「要上 GitHub 備份，還是只留本機？」<br>• 只留本機：之後不再碰 GitHub，只做本機 commit<br>• 上 GitHub：再問私有／公開（建議私有；選公開會提醒規格書、工單、紀錄都會一併推上去）與 repo 名稱。選了備份＝每張票 commit 完自動 push，之後不再逐票問<br>（每張票完成並通過檢查就自動 commit，這是固定行為，不用問） |
-| 4 | **定調三問** | ① 一句話描述（已答）② 專案規模：小工具／中大型正式產品 ③ 技術偏好（沒有就先不猜） |
-| 5 | **反覆提問（訪談迴圈）** | Agent 用評分表（十個面向：目標、使用者、功能與 MVP、技術選型、資料庫相關、外部整合、UI／視覺、邊界與錯誤、資安權限、驗收標準）一輪一輪問，直到**總分 ≥ 9.0 且關鍵面向（★）滿分**才停。<br>• 每輪最多 4 題，以選擇題為主；每題都附「為什麼問、2–4 個選項（標推薦與代價）、舉例、術語白話」<br>• 彼此會影響的題目一定拆到不同輪，所以有時一輪只有 1 題<br>• 答「都可以」會被追問一次；說「你決定就好」則由它選預設，並寫進決策紀錄（標「預設，可改」）<br>• 每輪結束更新評分表給你看，並把已確認內容寫進草稿規格書，中斷不會前功盡棄<br>• 想提前結束就說「夠了，開始做」；最多 8 輪，到了上限讓你三選一：逐項補答／全部用預設／中止 |
-| 5a | 必問題（每案固定會出現） | • **視覺定調**（每個專案都要問）：風格（極簡工具風／資訊密集儀表板／消費型活潑）、亮暗色、主色、參考網站<br>• **執行方式**：本機直接執行，或用 Docker 打包（選 Docker 會補問 port、要留在容器外的資料、機密怎麼進去；它會先檢查你有沒有裝 Docker）<br>• **技術棧攤牌**：它先給一張分層技術棧表（前端、UI 樣式、後端、資料庫、測試、執行方式，各附理由與替代方案），你點頭或修改<br>• **要不要自動化測試**：附白話取捨 |
-| 6 | 寫規格書＋拆工單＋自我找碴 | 規格書不允許「待定」；工單一張一張 ticket；它會模擬下游視角自我稽核 7 項，缺口回頭補問 |
-| 6a | **（可選）Codex 外部覆核** | 它會問「要不要用 Codex 獨立檢查一次計劃內容？」並提醒**需要 Codex 付費帳號且 CLI 已登入**。不要就跳過，不影響流水線 |
-| 7 | **你確認** | 它產出 HTML 放在 `.pipeline/output/`：規格書、工單看板（依功能分組，一眼看到有哪些工作）；有畫面的專案多一份 **UI 原型**，要你明確說「**外觀可以**」。頂端有「缺口總覽」（沒問清楚、用預設帶過的、省略的），有缺口它不會藏。要改就直接講，它原地改檔再讓你確認一次 |
-| 8 | **政策題與預設（開工前最後的問題）** | ① **做不下去怎麼辦**：票重做 2 次仍 FAIL、稽核 3 輪仍 FAIL、實測 2 輪仍 FAIL、規格沒定義、環境修不了——<br>　• 無人值守（建議）：全程不回頭找你，不猜需求、不花錢、卡住的部分標記跳過，結案報告一次列給你<br>　• 遇事停下來問：碰到就停下等你決定<br>② **票級 Codex 驗證（預設開，不再問）**：每張票做完，Codex（gpt-5.6-sol／medium）會在隔離副本唯讀地再檢查一次，Claude 逐項親自覆核；每票多呼叫一次 Codex，**需 Codex 付費帳號且 CLI 已登入**；未安裝、未登入、被拒絕、逾時都會標「未執行／呼叫失敗／未完成」，不卡流水線。要關閉請在此時告訴它<br>答案寫進 `.pipeline/plan/run-policy.md`。（需求層級問題在任何模式都不准猜，最多標記跳過） |
-| 9 | **換手點** | 工單定稿後它請你**開新對話、輸入 `/blacktea_plan`（不帶參數）**——訪談把 context 堆得很厚，建造階段換乾淨的對話跑 |
-| 10 | **自動執行（不再需要你）** | 建造（最多 3 隻並行，一票一隻）→ 每票獨立檢查，通過才 commit（選了備份就 push，push 前會掃機密）→ 全案稽核（Critical 與 High 都清零才過，上限 3 輪）→ 瀏覽器實測全部使用者旅程（上限 2 輪）→ 寫 FINAL-REPORT。過程中清單外的指令，Claude Code 仍會照常問你權限 |
-| 11 | 結案 | 主對話向你總結：做了什麼、通過哪些檢查、已知限制、報告位置。無人值守期間跳過的事項會列在報告裡 |
-| 12 | 之後 | 想改東西：`/blacktea_change`；想累積經驗：`/blacktea_retro` |
+| 1 | 打 `/blacktea_plan 一句話描述` | 描述直接當作訪談的起點 |
+| 2 | 專案準備 | 建 `.pipeline/`；只有專案需要又缺少時才從模板建 `.claude/settings.json`／`.mcp.json`，不覆蓋你既有的設定 |
+| 3 | **Git 政策** | 「只留本機，還是上 GitHub？」選 GitHub 再確認私有／公開、repo 名稱、分支。選了備份＝每張票 commit 完自動 push（push 前掃機密），之後不再逐票問 |
+| 4 | **訪談** | 每輪最多 4 題、以選擇題為主，每題標建議與代價；只問會影響產品行為、資料、權限、部署或返工成本的事。說「你決定」就採預設並寫進決策紀錄。最多 8 輪 |
+| 4a | 必問題（每案都有） | **頁面與流程**、**視覺定調**（風格、亮暗、主色、參考網站）、**執行方式**（本機或 Docker；選 Docker 會補問 port、volume、機密；會先檢查你有沒有裝 Docker）、**技術路線**（它先給分層技術棧表，你點頭或修改） |
+| 5 | **確認規格書** | 產出 `<專案名>_requirements.html`：八個必備章、表格為主、缺口總覽放最前面、設計系統附亮暗視覺樣本與對比驗算。你點頭後才拆票 |
+| 6 | 拆工單＋自我找碴 | 工單寫在 `tickets.json`，腳本檢查編號、依賴循環、檔案範圍，再產生 02-workplan.md 與 HTML |
+| 7 | **確認工作單與外觀** | `<專案名>_workplan.html`（依功能群分組的票卡片）；有畫面的專案多一份 **UI 原型**，要你明確說「**外觀可以**」。HTML 都能手動切日／夜模式 |
+| 8 | **政策（開工前最後的問題）** | ① **做不下去怎麼辦**：無人值守（建議；不猜需求、不花錢、卡住的跳過並在報告列出）或遇事停下來問<br>② **票級 Codex 驗證（預設開，不再問）**：每張票做完，Codex（gpt-5.6-sol／medium）在隔離副本唯讀再檢查一次，Claude 逐項親自覆核；要關閉就在這時說 |
+| 9 | **自動執行** | 直接交給總指揮，不用開新對話。一次一張票、每張票在獨立 git worktree 建造 → 獨立檢查簽收據 → commit 並整合 → 全案稽核（Critical／High 清零，修復最多 3 次）→ 實測全部旅程（修復最多 2 次）→ 報告 |
+| 10 | 結案 | 全部通過才是 COMPLETED；有跳過、未驗或失敗就是 INCOMPLETE，報告第一行寫原因 |
+| 11 | 之後 | 想改東西：`/blacktea_change`；想累積經驗：`/blacktea_retro` |
 
 ### 中斷與續跑
 
-用量上限、關機、重啟之後，在專案裡再打一次同一個指令（不帶參數）即可，進度存在 `.pipeline/state.md`。
-
-### `/blacktea_change` 的流程
-
-| # | 步驟 | 你會看到 |
-|---|---|---|
-| 1 | 釐清 | 描述已可寫成驗收步驟就不問；有歧義才用選擇題一次問完（2–4 題）。涉及新的外部資料來源會先實測探測，拿事實再問你。舊專案若缺政策檔，會補問無人值守政策，並補寫「票級 Codex 驗證: 開」 |
-| 2 | 改規格、開 T-Rev 票 | 單次 commit |
-| 3 | 自動執行 | 建造 → 每票檢查 → 增量稽核 → 修復 → 增量實測 → 補報告（`output/reports/<輪名>-report.md`） |
+再打一次同一個指令（不帶參數）即可。進度存在 `.pipeline/state.json`（`state.md` 是自動產生的摘要）；中斷在 commit 前後都會先核對收據與 Git，不會重做已整合的票，也不會放行沒驗過的票。
 
 ## 3. 花費
 
 （2026-08 查價，之後請以官方定價頁為準）
-流水線的主引擎是 **Claude**；**Codex 只是可選的第二意見**——整個專案除了「拆完票覆核一次、首輪稽核一次」外，**票級 Codex 驗證預設開啟，每張票的票級檢查再多一次**（要關閉才寫進 run-policy「關」）。機器上沒裝或呼叫失敗就標「未執行／呼叫失敗」，不影響流水線。
+
+主引擎是 **Claude**。Codex 是第二意見：票級 Codex 驗證預設每張票多一次 `codex exec`；拆票後的計劃覆核與首輪程式覆核要在 run-policy 開 `external_review` 才做，整個專案各最多一次。
 
 | 角色 | 模型 | 為什麼吃量 |
 |---|---|---|
-| 訪談官／總指揮（主對話） | session 模型（建議 opus） | 訪談來回多回合、讀整份規格與工單 |
-| 建造者 agent2 | sonnet | 一票一隻、最多 3 隻並行，每隻都讀工單＋規格＋程式碼 |
-| 票級檢查員 agent3-ticket-check | sonnet | 每票至少一次（FAIL 重做再加）；只載約 7 KB 人設，照票面重跑驗證 |
-| 稽核員 agent3 | opus | **主要消耗**：全案稽核首輪逐檔全量＋複審最多 3 輪 |
+| 訪談官（主對話） | session 模型（建議 opus） | 訪談來回多回合 |
+| 總指揮 agent0 | opus | 讀狀態、派工、判關卡、寫報告 |
+| 建造者 agent2 | sonnet | 一票一隻，只讀該票、相關規格與程式碼 |
+| 票級檢查員 | sonnet | 每票至少一次，親自重跑驗證、重建紅燈 |
+| 稽核員 agent3 | opus | **主要消耗**：首次全案逐檔，之後增量 |
 | 實測員 agent4 | sonnet | 真瀏覽器操作、截圖留證 |
 
-| 方案 | 月費 | 對這條流水線的實際體感 |
+| 方案 | 月費 | 體感 |
 |---|---|---|
-| Claude Pro | $20 | 跑得動但一直撞 5 小時上限：一個視窗大約 2–4 張票就要等解鎖；靠 `state.md` 斷點續跑不會壞，但十幾張票的系統會拖成好幾天 |
-| **Claude Max 5x（建議最低）** | $100 | 一天內跑完一個小型系統（10–15 張票、稽核 1–2 輪）的門檻 |
-| Claude Max 20x | $200 | 同時開兩個專案、每天都在跑、或常常 20 張票以上再升；可先買 5x 撞到週上限再升級 |
-| ChatGPT Plus（Codex，可選） | $20 | 基本兩次外，票級 Codex 驗證預設每票多一次，票多的專案要留意額度。Pro $100/$200 對這條線是浪費。不買就跳過外部覆核 |
+| Claude Pro | $20 | 跑得動但常撞 5 小時上限，靠斷點續跑不會壞，但十幾張票會拖成好幾天 |
+| **Claude Max 5x（建議最低）** | $100 | 一天內跑完一個小型系統（10–15 張票）的門檻 |
+| Claude Max 20x | $200 | 同時開多個專案或常常 20 張票以上再升 |
+| ChatGPT Plus（Codex） | $20 | 票級 Codex 驗證每票一次，票多的專案留意額度 |
 
-**結論：最低 $100/月（Max 5x）；要跨廠牌覆核再加 $20（ChatGPT Plus）＝ $120/月。** 偶爾才開一個專案的人可以改走 API 按量計費（Opus $5／$25、Sonnet $3／$15 每百萬 token 輸入／輸出），一個小系統跑完粗估 $30–100；每週都在跑的話訂閱划算得多。
-
-省量旋鈕都在引擎裡：票級檢查員模型（`agents/agent3_ticket_check.md` frontmatter，現為 sonnet；要更嚴改 opus）、並行建造數（`skills/blacktea-dispatch/SKILL.md` ③）、稽核員模型（`agents/agent3_review.md` frontmatter）。
+省量旋鈕：各角色模型在 `agents/*.md` frontmatter；票級 Codex 驗證在專案 `run-policy.md` 改「關」。
 
 ## 4. 資料夾結構
 
@@ -88,26 +76,38 @@
 
 ```
 ~/.claude/
-├── commands/   你打的指令（三個）：blacktea_plan／blacktea_change／blacktea_retro
-├── agents/     六個角色，一人一檔（總指揮分身、訪談官、建造者、票級檢查員、稽核員、實測員）＋ README.md（給 AI 角色的設計說明）
-├── skills/     技能：派工與版控、訪談三技能、品質檢查，以及 /git、/vscode、/clawd
-└── blacktea/   共用執行契約、經驗包 lessons.md、機密掃描 scan-push.py、tests/、templates/（專案腳印模板）
+├── commands/   三個指令：blacktea_plan／blacktea_change／blacktea_retro
+├── agents/     六個角色（總指揮、訪談官、建造者、票級檢查員、稽核員、實測員）
+├── skills/     派工與版控、訪談三技能、品質檢查，以及 /git、/vscode、/clawd
+└── blacktea/
+    ├── protocol.md     共通契約：責任、狀態、重試上限、結案條件
+    ├── references/     按需讀的細則：執行流程、驗證配方、修復、稽核、舊專案接手
+    ├── scripts/        pipeline.py（狀態、收據、工單檢查與產生）、scan_push.py（機密掃描）、md2html.py（HTML 檢視版）
+    ├── templates/      專案模板與 examples/ 格式樣本
+    ├── tests/          腳本測試
+    └── lessons.md      經驗包
 ```
 
 ### 專案內（每個專案自己的 `.pipeline/`）
 
 ```
 <你的專案>/
-├── .claude/settings.json   預放行的常用指令（開場自動複製）
-├── .mcp.json               Playwright（實測員開瀏覽器用，開場自動複製）
 └── .pipeline/
-    ├── plan/               規格書 01-requirements.md、工單 02-workplan.md、git-policy.md、run-policy.md、ui-prototype.html（有畫面才有）
-    ├── output/             給你看的成果：規格與工單的 HTML、FINAL-REPORT.md（總覽）、reports/<輪名>-report.md
-    ├── rounds/<NN>/        每次生成一個資料夾：01＝首次建造，每次 /blacktea_change 再多一個（02-T-Rev01…）
-    │   ├── build-log/      每張票的施工紀錄
-    │   ├── ticket-checks/  每張票的檢查紀錄
-    │   ├── evidence/       指令輸出、截圖等證據
-    │   └── 04-verify-report.md、05-e2e-report.md   稽核與實測報告
-    ├── state.md            目前進度（中斷續跑靠它）
-    └── waivers.md          你明確豁免的項目
+    ├── plan/           01-requirements.md、tickets.json（工單唯一來源）、02-workplan.md（產生的）、git-policy.md、run-policy.md、ui-prototype.html
+    ├── output/         <專案名>_requirements.html、_workplan.html、_ui-prototype.html、FINAL-REPORT.md、reports/<輪名>-report.md
+    ├── rounds/<NN>/    每輪一個資料夾（01＝首次建造，之後 02-T-Rev01…）：build-log/、ticket-checks/、evidence/、04、05 報告
+    ├── worktrees/      每張票的隔離工作區（失敗的票留在這裡，不污染主專案）
+    ├── state.json      執行狀態唯一來源（只由 pipeline.py 更新）
+    ├── state.md        自動產生的進度摘要
+    ├── findings.md     跨輪 V／E／U 發現索引
+    └── waivers.md      你明確豁免的項目
 ```
+
+### 驗證引擎本身
+
+```bash
+python3 -m unittest discover -s ~/.claude/blacktea/tests -v
+python3 ~/.claude/blacktea/scripts/check_engine.py
+```
+
+測試在臨時 repo 驗證收據、worktree 隔離、重試上限、替代依賴、工單產生與機密掃描；不測真實 GitHub push、瀏覽器或 Docker。

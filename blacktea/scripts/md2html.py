@@ -5,8 +5,8 @@
 """把訪談官的 .md（規格書／工作單）轉成 Phase E 的 HTML 檢視版。
 
 用法（uv 會自動準備 markdown 套件）：
-  uv run ~/.claude/blacktea/md2html.py --kind requirements <in.md> <out.html> --project <專案名字>
-  uv run ~/.claude/blacktea/md2html.py --kind workplan     <in.md> <out.html> --project <專案名字>
+  uv run ~/.claude/blacktea/scripts/md2html.py --kind requirements <in.md> <out.html> --project <專案名字>
+  uv run ~/.claude/blacktea/scripts/md2html.py --kind workplan     <in.md> <out.html> --project <專案名字>
 """
 import argparse
 import html
